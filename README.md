@@ -3,7 +3,7 @@ VMWare powershell module
 
 ### Master
 
-Version: 1.0.13
+Version: 1.0.2
 
 1.0.0
 

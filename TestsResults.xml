@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="6" errors="0" failures="0" not-run="0" inconclusive="0" ignored="1" skipped="0" invalid="0" date="2018-12-04" time="01:51:02">
+  <environment user="appveyor" machine-name="APPVYR-WIN" cwd="C:\projects\vmware" user-domain="APPVYR-WIN" platform="Microsoft Windows Server 2012 R2 Datacenter|C:\windows|\Device\Harddisk0\Partition5" nunit-version="2.5.8.0" os-version="6.3.9600" clr-version="4.0.30319.42000" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Ignored" success="True" time="1.4956" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="C:\projects\vmware\vmware.Tests.ps1" executed="True" result="Ignored" success="True" time="1.4956" asserts="0" description="C:\projects\vmware\vmware.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="vmware : Module Tests" executed="True" result="Success" success="True" time="1.1133" asserts="0" description="vmware : Module Tests">
+            <results>
+              <test-case description="should have a test for each function" name="vmware : Module Tests.should have a test for each function" time="1.1133" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="vmware : Get-VMWareVMReconfiguration" executed="True" result="Ignored" success="True" time="0.3822" asserts="0" description="vmware : Get-VMWareVMReconfiguration">
+            <results>
+              <test-suite type="TestFixture" name="Help" executed="True" result="Ignored" success="True" time="0.3822" asserts="0" description="Help">
+                <results>
+                  <test-case description="has Synopsis Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Synopsis Help Section" time="0.2937" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="has Synopsis Help Section that it not start with the command name" name="vmware : Get-VMWareVMReconfiguration.Help.has Synopsis Help Section that it not start with the command name" time="0.0102" asserts="0" success="True" result="Ignored" executed="False" />
+                  <test-case description="has Description Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Description Help Section" time="0.0088" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="has Parameters Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Parameters Help Section" time="0.0226" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Example - Count should be greater than 0" name="vmware : Get-VMWareVMReconfiguration.Help.Example - Count should be greater than 0" time="0.0356" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="has Notes Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Notes Help Section" time="0.0113" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

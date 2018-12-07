@@ -17,4 +17,6 @@ Version: 1.0.6
     *Example*   
         List changes in the month of November for the following vm: Server01
 
+        ```powershel
         (Get-VIEvent -Entity Server01) | where { $_.gettype().name -eq 'VmReconfiguredEvent' } | Get-VMWareVMReconfiguration
+        ```

@@ -1,26 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="6" errors="0" failures="0" not-run="0" inconclusive="0" ignored="1" skipped="0" invalid="0" date="2018-12-07" time="01:00:25">
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="6" errors="0" failures="0" not-run="0" inconclusive="0" ignored="1" skipped="0" invalid="0" date="2018-12-07" time="01:05:13">
   <environment user="appveyor" machine-name="APPVYR-WIN" cwd="C:\projects\vmware" user-domain="APPVYR-WIN" platform="Microsoft Windows Server 2012 R2 Datacenter|C:\windows|\Device\Harddisk0\Partition5" nunit-version="2.5.8.0" os-version="6.3.9600" clr-version="4.0.30319.42000" />
   <culture-info current-culture="en-US" current-uiculture="en-US" />
-  <test-suite type="TestFixture" name="Pester" executed="True" result="Ignored" success="True" time="1.1869" asserts="0" description="Pester">
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Ignored" success="True" time="1.0485" asserts="0" description="Pester">
     <results>
-      <test-suite type="TestFixture" name="C:\projects\vmware\vmware.Tests.ps1" executed="True" result="Ignored" success="True" time="1.1869" asserts="0" description="C:\projects\vmware\vmware.Tests.ps1">
+      <test-suite type="TestFixture" name="C:\projects\vmware\vmware.Tests.ps1" executed="True" result="Ignored" success="True" time="1.0485" asserts="0" description="C:\projects\vmware\vmware.Tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="vmware : Module Tests" executed="True" result="Success" success="True" time="0.8175" asserts="0" description="vmware : Module Tests">
+          <test-suite type="TestFixture" name="vmware : Module Tests" executed="True" result="Success" success="True" time="0.7182" asserts="0" description="vmware : Module Tests">
             <results>
-              <test-case description="should have a test for each function" name="vmware : Module Tests.should have a test for each function" time="0.8175" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="should have a test for each function" name="vmware : Module Tests.should have a test for each function" time="0.7182" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareVMReconfiguration" executed="True" result="Ignored" success="True" time="0.3694" asserts="0" description="vmware : Get-VMWareVMReconfiguration">
+          <test-suite type="TestFixture" name="vmware : Get-VMWareVMReconfiguration" executed="True" result="Ignored" success="True" time="0.3303" asserts="0" description="vmware : Get-VMWareVMReconfiguration">
             <results>
-              <test-suite type="TestFixture" name="Help" executed="True" result="Ignored" success="True" time="0.3694" asserts="0" description="Help">
+              <test-suite type="TestFixture" name="Help" executed="True" result="Ignored" success="True" time="0.3303" asserts="0" description="Help">
                 <results>
-                  <test-case description="has Synopsis Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Synopsis Help Section" time="0.2882" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="has Synopsis Help Section that it not start with the command name" name="vmware : Get-VMWareVMReconfiguration.Help.has Synopsis Help Section that it not start with the command name" time="0.0075" asserts="0" success="True" result="Ignored" executed="False" />
-                  <test-case description="has Description Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Description Help Section" time="0.0087" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="has Parameters Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Parameters Help Section" time="0.0076" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="Example - Count should be greater than 0" name="vmware : Get-VMWareVMReconfiguration.Help.Example - Count should be greater than 0" time="0.0468" asserts="0" success="True" result="Success" executed="True" />
-                  <test-case description="has Notes Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Notes Help Section" time="0.0107" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="has Synopsis Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Synopsis Help Section" time="0.2471" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="has Synopsis Help Section that it not start with the command name" name="vmware : Get-VMWareVMReconfiguration.Help.has Synopsis Help Section that it not start with the command name" time="0.0067" asserts="0" success="True" result="Ignored" executed="False" />
+                  <test-case description="has Description Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Description Help Section" time="0.0081" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="has Parameters Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Parameters Help Section" time="0.0059" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Example - Count should be greater than 0" name="vmware : Get-VMWareVMReconfiguration.Help.Example - Count should be greater than 0" time="0.0529" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="has Notes Help Section" name="vmware : Get-VMWareVMReconfiguration.Help.has Notes Help Section" time="0.0096" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
             </results>

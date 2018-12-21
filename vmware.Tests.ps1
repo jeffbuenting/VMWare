@@ -53,7 +53,7 @@ InModuleScope $ModuleName {
             Return $Obj
         }
 
-        Mock -Command Get-View -ParameterFilter { $VIObject -eq 'AlarmManager' } -MockWith {
+        Mock -Command Get-View -ParameterFilter { $VIObject } -MockWith {
             $Obj = New-Object -TypeName PSObject -Property (@{
                 MoRef = 'Test-Test-01'
             })

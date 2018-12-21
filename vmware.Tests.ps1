@@ -65,9 +65,7 @@ InModuleScope $ModuleName {
         $V = (Get-Module -Name Pester).Version
         if (  "$($V.Major).$($V.Minor).$($V.Build)" -ge "3.4.4" ) { 
 
-            $DS = New-MockObject -Type 'VMware.VimAutomation.ViCore.Impl.V1.DatastoreManagement.VmfsDatastoreImpl' {
-        
-            }
+            $DS = New-MockObject -Type 'VMware.VimAutomation.ViCore.Impl.V1.DatastoreManagement.VmfsDatastoreImpl'
 
             Context Execution {
             }
@@ -303,8 +301,7 @@ InModuleScope $ModuleName {
                 Return (New-Object -TypeName PSObject)
             }
 
-            $VM = Mock-NewObject VMware.VimAutomation.ViCore.Impl.V1.Inventory.InventoryItemImpl {
-            }
+            $VM = New-MockObject -type VMware.VimAutomation.ViCore.Impl.V1.Inventory.InventoryItemImpl 
 
             Context Output {
                 It "Should return VMWare Event object" {

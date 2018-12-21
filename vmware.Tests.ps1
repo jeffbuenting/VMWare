@@ -6,7 +6,7 @@ $ModulePath = $PSScriptRoot
 $Global:ModuleName = $ModulePath | Split-Path -Leaf
 
 # ----- Remove and then import the module.  This is so any new changes are imported.
-Get-Module -Name $ModuleName -All | Remove-Module -Force -Verbose
+Get-Module -Name $ModuleName -All | Remove-Module -Force
 
 Import-Module "$ModulePath\$ModuleName.PSD1" -Force -ErrorAction Stop  
 
@@ -21,8 +21,8 @@ InModuleScope $ModuleName {
 
         $testFile = Get-ChildItem $module.ModuleBase -Filter '*.Tests.ps1' -File -verbose
     
-        $testNames = Select-String -Path $testFile.FullName -Pattern 'describe\s[^\$](.+)?\s+{' | ForEach-Object {
-            [System.Management.Automation.PSParser]::Tokenize($_.Matches.Groups[1].Value, [ref]$null).Content
+        $testNames = Select-String -Path $testFile.FullName -Pattern 'Describe "\$ModuleName : (.*)"' | ForEach-Object {
+              $_.matches.groups[1].value
         }
 
         $moduleCommandNames = (Get-Command -Module $ModuleName | where CommandType -ne Alias)
@@ -33,80 +33,100 @@ InModuleScope $ModuleName {
     }
 
     #-------------------------------------------------------------------------------------
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Get-VMWareAlarm" -Tags Alarm {
+    
+        # ----- Mocks
+        Mock -Command Get-View -ParameterFilter { $ID -eq 'AlarmManager' } -MockWith {
+            $Obj = New-Object -TypeName PSObject 
+
+            $Obj | Add-Member -MemberType ScriptMethod -Name GetAlarm -Value {
+                Param ( $MoRef )
+
+
+                $AlarmObj = New-Object -TypeName PSObject -Property {}
+
+                Return $AlarmObj
+            } 
+
+            Return $Obj
+        }
+
+        Mock -Command Get-View -ParameterFilter { $VIObject -eq 'AlarmManager' } -MockWith {
+            $Obj = New-Object -TypeName PSObject -Property (@{
+                MoRef = 'Test-Test-01'
+            })
+
+            Return $Obj
+        }
+
+        # ----- if pester is older than 3.4.4, New-MockObject does not exist, so can't test
+        $V = (Get-Module -Name Pester).Version
+        if (  "$($V.Major).$($V.Minor).$($V.Build)" -ge "3.4.4" ) { 
+
+            $DS = New-MockObject -Type 'VMware.VimAutomation.ViCore.Impl.V1.DatastoreManagement.VmfsDatastoreImpl' {
+        
+            }
+
+            Context Execution {
+            }
+
+            Context Output {
+                It "Should Accept pipeline input and return an Alarm object" {
+                    $DS | Get-VMWareAlarm | Should BeofType PSObject
+                }
+
+                It "Should accept positional input and return an Alarm object" {
+                    $DS | Get-VMWareAlarm | Should BeofType PSObject
+                }
+            }
+        }
+        Else {
+            Write-Warning "Test uses New-MockObject which requires Pester version 3.4.4 or higher"
+        }
+    }
+
+    #-------------------------------------------------------------------------------------
 
     Write-Output "`n`n"
 
-    Describe "$ModuleName : Get-VMWareVMReconfiguration" {
-       
-        
-        # ----- Get Function Help
+    Describe "$ModuleName : Copy-VMWareAlarm" -Tags Alarm {
 
-        # ----- Pester to test Comment based help
+        # ----- Mocks
+        Mock -Command Get-View -ParameterFilter { $ID -eq 'AlarmManager' } -MockWith {
+            $Obj = New-Object -TypeName PSObject 
 
-        # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
+            $Obj | Add-Member -MemberType ScriptMethod -Name GetAlarm -Value {
+                Param ( $MoRef )
 
-        Context "Help" {
+                $AlarmObj = New-Object -TypeName PSObject -Property {}
 
-            $H = Help Get-VMWareVMReconfiguration -Full
+                Return $AlarmObj
+            } 
 
-            # ----- Help Tests
+            Return $Obj
+        }
 
-            It "has Synopsis Help Section" {
-
-                { $H.Synopsis }  | Should Not BeNullorEmpty
-
+        Mock -CommandName New-Object -ParameterFilter { $TypeName -eq 'VMware.Vim.AlarmSpec' } -MockWith {
+            $Obj = @{
+                Name = $Null
+                Description = $Null
             }
 
-            It "has Synopsis Help Section that it not start with the command name" {
+            Return $Obj
+        }
 
-                 $H.Synopsis | Should Not Match $H.Name
+       Context Execution {
 
-            } -skip
+            # ----- cannot mock PowerCLI objects
+            # https://github.com/pester/Pester/issues/803
 
-            It "has Description Help Section" {
-
-                 { $H.Description } | Should Not BeNullorEmpty
-
+            It "Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" {
+  
+                $True | Should be $True
             }
-
-            It "has Parameters Help Section" {
-
-                 { $H.Parameters.parameter } | Should Not BeNullorEmpty
-
-            }
-
-            # Examples
-
-            it "Example - Count should be greater than 0"{
-
-                 { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
-
-            }
-
-            # Examples - Remarks (small description that comes with the example)
-
-            foreach ($Example in $H.examples.example)
-
-            {
-
-                it "Example - Remarks on $($Example.Title)"{
-
-                     $Example.remarks  | Should not BeNullOrEmpty
-
-                }
-
-            }
-
-            It "has Notes Help Section" {
-
-                { $H.alertSet } | Should Not BeNullorEmpty
-
-            }
-
-        } 
-
-        $Event = New-MockObject -Type VMWare.Vim.VmReconfiguredEvent
-        
+        }
 
     }
 
@@ -114,74 +134,199 @@ InModuleScope $ModuleName {
 
     Write-Output "`n`n"
 
-    Describe "$ModuleName : Get-VMWareOrphanedFile" {
+    Describe "$ModuleName : Get-VMWareEvent" -Tags Event {
+
+        # ----- Mocks
+
+        Mock -Command Get-View -ParameterFilter { $ID -eq 'EventManager' } -MockWith {
+            $OBJ = @{}
+
+            $OBJ | Add-member -MemberType ScriptMethod -Name CreateCollectorForEvents -Value {
+                Param ($eventFilter)
+
+                Write-Output 'CreateCollectorForEvents'
+            }
+
+            Return $OBJ
+        }
+
+        Mock -Command Get-View -ParameterFilter { $ID -eq 'ServiceInstance' } -MockWith {
+
+            $ContentOBJ = @{
+                ScheduledTaskManager = 'SchedTaskMGR'
+            }
+
+            $Obj = @{
+                Content = $ContentObj
+            }
+
+            return $OBJ
+        }
+
+        Mock -Command Get-View -ParameterFilter { $ID -eq 'SchedTaskMGR' } -MockWith {
+            $Obj = @{
+                ScheduledTask = 'ScheduledTask'
+            }
+
+            Return $OBJ
+        }
+
+        Mock -Command Get-View -ParameterFilter { $ID -eq 'SchedTask' } -MockWith {
+            $NameOBJ = @{
+                Name = 'Task'
+            }
+
+            $Obj = @{
+                info = $NameObj
+                MoRef = 'MoRef'
+            }
+
+            Return $OBJ
+        }
+
+        Mock -Command Get-View -ParameterFilter { $ID -eq 'CreateCollectorForEvents' } -MockWith {
+            $OBJ = @{}
+
+            $OBJ | Add-Member -MemberType ScriptMethod -Name ReadNextEvents -Value {
+                Param ($eventnumber)
+            }
+
+            $OBJ | Add-Member -MemberType ScriptMethod -Name DestroyCollector -Value { }
+
+            Return $OBJ
+        }
+
+        Mock -Command New-Object -ParameterFilter { $TypeName -eq 'Vim.EventFilterSpecByEntity' } -MockWith {
+            $obj = @{
+                Recursion = 'self'
+            }
+
+            Return $OBJ
+        }
+
+        Mock -Command New-Object -ParameterFilter { $TypeName -eq 'VMware.Vim.EventFilterSpecByTime' } -MockWith {
+            $obj = @{
+                begintime = $Null
+                EndTime = $Null
+            }
+
+            Return $OBJ
+        }
+
+        Mock -Command New-Object -ParameterFilter { $TypeName -eq 'VMware.Vim.EventFilterSpecByUsername' } -MockWith {
+            $obj = @{
+                UserList = $Null
+                SystemUser = $Null
+            }
+
+            Return $OBJ
+        }
+
+        Mock -Command New-Object -ParameterFilter { $TypeName -eq 'VMware.Vim.EventFilterSpec' } -MockWith {
+            $EntityOBJ = @{
+                Entity = $Null
+            }
+            
+            $obj = @{
+                disableFullMessage = $Null
+                Entity = $EntityOBJ
+                EventTypeID = $Null
+                Time = $Null
+                UserName = $Null
+                ScheduledTask = $Null
+            }
+
+            Return $OBJ
+        }
+
+        Context Execution {
+            It "Should throw an error if there is one" {
+                { Get-VMWareEvent } | Should Throw
+            }
+
+            It "Should not throw an error if there is not one" {
+                { Get-VMWareEvent } | Should Not Throw
+            } -Pending
+        }
+
+        Context Output {
+
+            # ----- cannot mock PowerCLI objects
+            # https://github.com/pester/Pester/issues/803
+
+            It "Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" {
+                $True | Should be $True
+            }
+
+   #         It "Should return an Event object " {
+   #             Get-VMWareEvent -Verbose | Should beoftype "*Event"
+   #         }
+        }
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Get-VMWareVMReconfiguration" -Tags Event {
+
+        # ----- if pester is older than 3.4.4, New-MockObject does not exist, so can't test
+        $V = (Get-Module -Name Pester).Version
+        if (  "$($V.Major).$($V.Minor).$($V.Build)" -ge "3.4.4" ) { 
+
+            $Event = New-MockObject -Type VMWare.Vim.VmReconfiguredEvent
+        
+            Context Execution {
+                It "Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" {
+                    $True | Should be $True
+                }
+            }
+        }
+        Else {
+            Write-Warning "Test uses New-MockObject which requires Pester version 3.4.4 or higher"
+        }
+
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Get-VMWareMotionHistory" -Tags Event {
+    
+        # ----- if pester is older than 3.4.4, New-MockObject does not exist, so can't test
+        $V = (Get-Module -Name Pester).Version
+        if (  "$($V.Major).$($V.Minor).$($V.Build)" -ge "3.4.4" ) { 
+
+            # ----- Mocks
+            Mock -CommandName Get-VMWareEvent -ParameterFilter { $Entity -and $start -and $Finish -and $eventTypes -and $Recurse } -MockWith {
+                Return (New-Object -TypeName PSObject)
+            }
+
+            $VM = Mock-NewObject VMware.VimAutomation.ViCore.Impl.V1.Inventory.InventoryItemImpl {
+            }
+
+            Context Output {
+                It "Should return VMWare Event object" {
+                    Get-VMWareMotionHistory -Entity $VM  | Should beoftype PSOBject
+                }
+            }
+
+        }
+        Else {
+            Write-Warning "Test uses New-MockObject which requires Pester version 3.4.4 or higher"
+        }
+    }
+
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Get-VMWareOrphanedFile" -Tags DataStore {
        
         
-        # ----- Get Function Help
-
-        # ----- Pester to test Comment based help
-
-        # ----- http://www.lazywinadmin.com/2016/05/using-pester-to-test-your-comment-based.html
-
-        Context "Help" {
-
-            $H = Help Get-VMWareOrphanedFile -Full
-
-            # ----- Help Tests
-
-            It "has Synopsis Help Section" {
-
-                { $H.Synopsis }  | Should Not BeNullorEmpty
-
-            }
-
-            It "has Synopsis Help Section that it not start with the command name" {
-
-                 $H.Synopsis | Should Not Match $H.Name
-
-            } -skip
-
-            It "has Description Help Section" {
-
-                 { $H.Description } | Should Not BeNullorEmpty
-
-            }
-
-            It "has Parameters Help Section" {
-
-                 { $H.Parameters.parameter } | Should Not BeNullorEmpty
-
-            }
-
-            # Examples
-
-            it "Example - Count should be greater than 0"{
-
-                 { $H.examples.example } | Measure-Object | Select-Object -ExpandProperty Count | Should BeGreaterthan 0
-
-            }
-
-            # Examples - Remarks (small description that comes with the example)
-
-            foreach ($Example in $H.examples.example)
-
-            {
-
-                it "Example - Remarks on $($Example.Title)"{
-
-                     $Example.remarks  | Should not BeNullOrEmpty
-
-                }
-
-            }
-
-            It "has Notes Help Section" {
-
-                { $H.alertSet } | Should Not BeNullorEmpty
-
-            }
-
-        } 
+        
 
             Mock -Command New-Object -ParameterFilter { $TypeName -eq 'VMware.Vim.FileQueryFlags' } -MockWith {
                 $Obj = @{
@@ -336,14 +481,19 @@ InModuleScope $ModuleName {
             # ----- Currently having issues mocking Get-Vm.  This throws thefollowing error.
             # ----- the expression not to throw an exception. Message was {Cannot process argument transformation on parameter 'Datastore'. Cannot convert the "System.Collections.Hashtable" value of type "System.Collections.Hashtable" to type "VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.StorageResource[]"
 
+            
+            It "Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" {
+                $True | Should be $True
+            }
 
-            It "Should accept pipeline input of type String and Convert it to a Datastore Object" {
-                $DS = 'Vol1'
 
-                { $DS | Get-VMWareOrphanedFiles -verbose } | Should not Throw
+    #        It "Should accept pipeline input of type String and Convert it to a Datastore Object" {
+    #            $DS = 'Vol1'
 
-                Assert-VerifiableMocks
-            } -Pending
+    #            { $DS | Get-VMWareOrphanedFiles -verbose } | Should not Throw
+
+    #            Assert-VerifiableMocks
+    #        } -Pending
 
       #      It "Should accept Pipeline Input of type DataStore (VMware.VimAutomation.ViCore.Impl.V1.DatastoreManagement.VmfsDatastoreImpl)" {
       #          $DS = Mock-NewObject -Type VMware.VimAutomation.ViCore.Impl.V1.DatastoreManagement.VmfsDatastoreImpl {}

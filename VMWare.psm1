@@ -1,4 +1,422 @@
-﻿Function Get-VMWareVMReconfiguration {
+﻿# -------------------------------------------------------------------------------------
+# Alarm Functions
+# -------------------------------------------------------------------------------------
+
+Function Get-VMWareAlarm {
+
+<#
+    .SYNOPSIS
+        Retrieves alarms assigned to VMWare objects.
+
+    .DESCRIPTION
+        VMWare objects like datastores, clusters, VMs can all have alarms associated with them.  Get-VMWareAlarm will retrieve the alarm with the specified object.
+
+    .PARAMETER VMWareObject
+        Vmware object that can have alarms assign.  Specify this to return the alarms assigned. 
+
+        valid are objects of type Datastore, Folder,Datacenter
+
+    .PARAMETER Name
+        Name of the alarm to retrieve.
+
+    .PARAMETER ID
+        Alarm ID
+
+    .EXAMPLE
+        Retrieve the datacenter alarm with ID alarm-301
+
+        Get-VMWareAlarm -Level Datacenters -ID 'alarm-301'
+
+    .EXAMPLE
+        Retrieve all from the Datacenters Parent (root)
+
+        Get-vmwarealarm -vmwareobject (get-folder datacenters)
+
+    .Note
+        Author : Jeff Buenting
+        Date : 2018 DEC 21
+        
+#>
+
+    [CmdletBinding(DefaultParameterSetName='default')]
+    param (
+        [Parameter( Mandatory = $True,ValuefromPipeline = $true )]
+        [PSObject[]]$VMWareObject,
+
+        [Parameter(ParameterSetName='Name')]
+        [string]$Name,
+ 
+        [Parameter(ParameterSetName='ID')]
+        [string]$ID
+        
+        # ----- What about an inherited switch to get all alarms for object plus any that are inherited from the objects parents on up to root.?  
+    )
+
+
+    Begin {
+        $alarmmgr = get-view -ID AlarmManager
+    }
+
+    Process {
+        foreach ( $VObj in $VMWareObject ) {
+
+            write-verbose "object type = $($VObj.GetType().fullname)"
+
+            # ----- Check if object is valid to have an alarm assigned to it.
+            Switch ( $VObj.GetType().fullname ) {
+                # ----- vCenter Root
+                # ----- The only way I can figure how to get the alarms from the root is to use the get-folder datacenters cmd.
+                'VMware.VimAutomation.ViCore.Impl.V1.Inventory.FolderImpl' {
+                    write-Verbose "Datastores folder (root)"
+                }
+            
+                # ----- Datastore
+                'VMware.VimAutomation.ViCore.Impl.V1.DatastoreManagement.VmfsDatastoreImpl' { 
+                    write-verbose "datastore" 
+                }
+
+                # ----- Datacenter
+                'VMware.VimAutomation.ViCore.Impl.V1.Inventory.DatacenterImpl' {
+                    write-Verbose 'datacenters'
+                }
+
+                default {
+                    Throw "Error : Object cannot have an alarm assigned to it."
+                }
+            }
+
+            Try {
+                ## ----- Converts level to a folder view.
+                #$From = Get-Folder -Name $Level -ErrorAction Stop | get-view -ErrorAction Stop
+
+                # ----- Take object and convert to view so we can get the MoRef
+                $V = $VObj | Get-View
+
+                Write-Debug "$($V | out-string)"
+            }
+            catch {
+                $ExceptionMessage = $_.Exception.Message
+                $ExceptionType = $_.Exception.GetType().Fullname
+                Throw "Get-VMWareAlarm : Error getting VIObject Folder Level.`n`n     $ExceptionMessage`n`n $ExceptionType"
+            }
+
+            Write-Verbose "Set Name = $($PSCmdlet.ParameterSetName)"
+
+            # ----- Return alarms for specified object.  Either all or filtered.
+            Switch ( $PSCmdlet.ParameterSetName ) {
+                'ID' {
+                    Write-verbose "Search for ID : $ID"
+                    $alarmmgr.getalarm( $V.MoRef ) | where Value -like $ID | foreach { Write-output (Get-View $_).info }
+                }   
+            
+                'Name' {
+                    Write-verbose "Search for Name : $Name"
+                    $alarmmgr.getalarm( $V.MoRef ) | foreach { Write-output ((Get-View $_).info | where name -like $Name ) }
+                }  
+     
+                default {
+                    Write-verbose "Returning all" 
+                    Write-verbose "Moref = $($V.Moref)"
+
+                    $alarmmgr.getalarm( $V.MoRef ) #| foreach { Write-output (Get-View $_).info }
+                }
+            }
+        }
+    }
+}
+
+# -------------------------------------------------------------------------------------
+
+function Copy-VMWareAlarm {
+
+<#
+    .SYNOPSIS
+        Copy an Alarm to a different VMWare Object.
+
+    .DESCRIPTION
+        To make custom changes to an alarm for a specific object, the alarm needs to be created on that object.  This function will copy the alarm, meaning it doesn't have to be manually created.
+
+        Once copied, the alarm can then be customized.
+
+    .PARAMETER Alarm
+        Alarm object to be copied
+
+    .PARAMETER To
+        Destination where the alarm should be copied
+
+    .EXAMPLE
+        Copies the Alarm-301 to all Datastore objects
+
+        Get-VMWareAlarm -Level Datacenters -ID 'alarm-301' | Copy-VMWareAlarm -To (Get-Datastore) -Verbose
+
+    .Links
+        http://www.lucd.info/2010/02/20/alarms-moving-them-around/#more-1799
+
+    .NOTES
+        Author : Jeff Buenting
+        Date : 2018 DEC 21
+
+        I modified LUCD's function.  Credit goes to him for the original. (See Link)
+#>
+
+    [CmdletBinding()]
+	param(
+        [parameter (Mandatory=$True,ValueFromPipeline=$True)]
+        [PSObject[]]$Alarm, 
+         
+        # ----- This can be any type of object that can have an alarm assigned to it.  It can also be an array.  Because it can be many types of objects, the parameter def is not strongly typed.
+        $To
+    )
+
+    Begin {
+        # ----- This temp var is used as the max length of the description field.  I am using it like this, so if Needed it is simpler to adjust and make it a parameter.
+        $MaxLen = 80
+    }
+    
+    Process {
+        Foreach ( $A in $Alarm ) {
+            Write-Verbose "Copy alarm $($A.Name)"
+       
+            # ----- Get AlarmManager object so we can manipulate the alarm objects
+	        $alarmMgr = Get-View -ID AlarmManager
+	        
+            # ----- Creating New Alarm Object
+	        $newAlarm = New-Object VMware.Vim.AlarmSpec
+	        $newAlarm = $A
+
+            # ----- store in a temp var otherwise the string gets long and funky
+	        $oldName = $a.Name
+	        $oldDescription = $a.Description
+
+	        foreach($Dest in $To){
+                Write-Verbose "     To $($Dest.Name)"
+ 
+                # ----- the alarm gets saved to the Management Object Reference for the Destination.  So the destination needs to be converted to a view so the ref exists as an attribute
+                $DestObj = $dest | Get-View
+
+			    $suffix = " (" + $dest.Name + ")"
+
+                write-verbose "Suffix = $Suffix"
+                Write-Verbose "A.desc = $($A.Description)"
+
+			    $newName = $oldName + $suffix
+
+			    $newAlarm.Name = $newName
+			    $newAlarm.Description = "$Suffix $OldDescription"
+
+                # ----- truncate desc to less than max.  otherwise error thrown.
+                if ( $NewAlarm.Description.length -gt $MaxLen ) { $newAlarm.Description = $newAlarm.Description.substring(0,$MaxLen-1) }
+
+		        
+                # ----- Not sure why this is here.  looks like it marks a depricated trigger as needing to change.
+                $newAlarm.Expression.Expression | Foreach {
+			        if($_.GetType().Name -eq "EventAlarmExpression"){
+				        $_.Status = $null
+				        $needsChange = $true
+			        }
+		        }
+
+                # ----- Check if Alarm with that name already exists.  Skip if it does
+                # ----- Ignoring error if the alarm does not exist
+                if ( Get-AlarmDefinition -Name $newAlarm.Name -ErrorAction SilentlyContinue ) {
+                    Write-Warning "Alarm already exists.  Skipping copy."
+                }
+                else {
+
+                    $newAlarm
+
+                    Write-verbose "Save Alarm to the destination"
+                    $alarmMgr.CreateAlarm($destObj.MoRef,$newAlarm)
+                }
+	        }
+        }
+    }
+}
+
+# -------------------------------------------------------------------------------------
+# Event Functions
+# -------------------------------------------------------------------------------------
+
+Function Get-VMWareEvent {
+
+<#   
+    .SYNOPSIS  
+        Returns vSphere events    
+
+    .DESCRIPTION 
+        The function will return vSphere events. With
+        the available parameters, the execution time can be
+       improved, compered to the original Get-VIEvent cmdlet. 
+
+    .NOTES  
+        Author:  Luc Dekens   
+        Update : Jeff Buenting
+
+        I changed the made some changes to the script to add errro handling, default parameters and streamline some of the event filters.  I also changed the name to match my module.
+        But most if not all credit to Luc Dekens.
+        
+
+    .PARAMETER Entity
+       When specified the function returns events for the
+       specific vSphere entity. By default events for all
+       vSphere entities are returned. 
+
+    .PARAMETER EventType
+       This parameter limits the returned events to those
+       specified on this parameter. 
+
+    .PARAMETER Start
+       The start date of the events to retrieve 
+       Defaults to one day ago. ( -1 )
+
+    .PARAMETER Finish
+       The end date of the events to retrieve.
+       Defaults to current date/time. 
+
+    .PARAMETER Recurse
+       A switch indicating if the events for the children of
+       the Entity will also be returned 
+
+    .PARAMETER User
+       The list of usernames for which events will be returned 
+
+    .PARAMETER System
+       A switch that allows the selection of all system events. 
+
+    .PARAMETER ScheduledTask
+       The name of a scheduled task for which the events
+       will be returned 
+
+    .PARAMETER FullMessage
+       A switch indicating if the full message shall be compiled.
+       This switch can improve the execution speed if the full
+       message is not needed.   
+
+    .PARAMETER EventMax
+        Max number of events to recieve.
+
+    .EXAMPLE
+       PS> Get-VMWareEventPlus -Entity $vm
+
+    .EXAMPLE
+       PS> Get-VMWareEventPlus -Entity $cluster -Recurse:$true
+
+    .LINK
+        http://www.lucd.info/2013/03/31/get-the-vmotionsvmotion-history/
+#>
+ 
+    [CmdletBinding()]
+    param(
+        [VMware.VimAutomation.ViCore.Impl.V1.Inventory.InventoryItemImpl[]]$Entity = (Get-Datacenter),
+
+        [string[]]$EventType,
+        
+        [DateTime]$Start = ((Get-Date).AddDays(-1)),
+        
+        [DateTime]$Finish = (Get-Date),
+        
+        [switch]$Recurse,
+        
+        [string[]]$User,
+        
+        [Switch]$System,
+        
+        [string]$ScheduledTask,
+        
+        [switch]$FullMessage = $false,
+
+        [Int]$MaxEvent = 100
+    )
+ 
+    process {
+        Try {
+            Write-verbose "Creating Event Filter"
+            $events = @()
+            $eventMgr = Get-View EventManager -ErrorAction Stop
+      
+            # ----- Build event filter.
+            $eventFilter = New-Object VMware.Vim.EventFilterSpec -ErrorAction Stop
+            $eventFilter.disableFullMessage = ! $FullMessage
+            $eventFilter.entity = New-Object VMware.Vim.EventFilterSpecByEntity -ErrorAction Stop
+            $eventFilter.entity.recursion = &{if($Recurse){"all"}else{"self"}}
+            $eventFilter.eventTypeId = $EventType
+
+            # ----- Event Range
+            $eventFilter.time = New-Object VMware.Vim.EventFilterSpecByTime -ErrorAction Stop
+        
+            if($Start){
+                $eventFilter.time.beginTime = $Start
+            }
+        
+            if($Finish){
+                $eventFilter.time.endTime = $Finish
+            }
+
+            # ----- Filter by user or System
+            if($User -or $System){
+                $eventFilter.UserName = New-Object VMware.Vim.EventFilterSpecByUsername -ErrorAction Stop
+        
+                if($User){
+                    $eventFilter.UserName.userList = $User
+                }
+        
+                if($System){
+                    $eventFilter.UserName.systemUser = $System
+                }
+            }
+        
+            # ----- Event filter on Scheduled task
+            if($ScheduledTask){
+                $si = Get-View ServiceInstance -ErrorAction Stop
+                $schTskMgr = Get-View $si.Content.ScheduledTaskManager -ErrorAction Stop
+                $eventFilter.ScheduledTask = Get-View $schTskMgr.ScheduledTask -ErrorAction Stop | where {$_.Info.Name -match $ScheduledTask} | Select -First 1 | Select -ExpandProperty MoRef
+            }
+
+            Write-Verbose "EventFilter = $($EventFilter | out-string)"
+        }
+        catch {
+            $ExceptionMessage = $_.Exception.Message
+            $ExceptionType = $_.Exception.GetType().Fullname
+            Throw "Get-VMWareEvent : Error creating Event Filter.`n`n     $ExceptionMessage`n`n $ExceptionType"
+        }
+
+        Write-Verbose "Entity = $($Entity | FL * | out-string)"
+
+        Try {
+            $entity | Foreach {
+                Write-verbose "Getting Entities for $($_.name)"
+
+                $eventFilter.entity.entity = $_.ExtensionData.MoRef
+
+                $eventCollector = Get-View ($eventMgr.CreateCollectorForEvents($eventFilter))
+                Write-verbose "EventCollector = $($eventCollector | gm | Out-string)"
+
+                $eventsBuffer = $eventCollector.ReadNextEvents($MaxEvent)
+
+                while($eventsBuffer){
+                    Write-output $EventsBuffer
+              #      $events += $eventsBuffer
+                    $eventsBuffer = $eventCollector.ReadNextEvents($MaxEvent)
+                }
+
+                $eventCollector.DestroyCollector()
+            }
+
+ #           Write-Output $events
+        }
+        catch {
+            $ExceptionMessage = $_.Exception.Message
+            $ExceptionType = $_.Exception.GetType().Fullname
+            Throw "Get-VMWareEvent : Error retrieving Events.`n`n     $ExceptionMessage`n`n $ExceptionType"
+        }
+    }
+}
+
+
+
+# -------------------------------------------------------------------------------------
+
+Function Get-VMWareVMReconfiguration {
 
 <#
     .Synopsis
@@ -7,13 +425,13 @@
     .Description
         audit changes made to a virtual machine
 
-    .Parameter Event
-        Event of type VmReconfiguredEvent.  Any other type of event will throw an error
+    .Parameter VM
+        VM object or name.  can accept all events but will only process the VMReconfiguredEvents.
 
     .Example
         List changes in the month of November for the following vm: Server01
 
-        (Get-VIEvent -Entity Server01) | where { $_.gettype().name -eq 'VmReconfiguredEvent' } | Get-VMWareVMReconfiguration
+        (Get-VIEvent -Entity Server01) | Get-VMWareVMReconfiguration
 
     .Link
         Modified script from this link
@@ -30,33 +448,132 @@
     [CmdletBinding()]
     Param (
         [parameter( Mandatory = $True, ValueFromPipeline = $True)]
-        [VMWare.Vim.VmReconfiguredEvent[]]$Event
+        [PSObject[]]$VM
     )
 
     Process {
-        Foreach ( $E in $Event ) {
-            Write-verbose "Auditing $($E.VM.name)"
+        Foreach ( $V in $VM ) {
 
-            $event.ConfigSpec.DeviceChange | Foreach {
-			    if($_.Device -ne $null){
-				    $report = New-Object PSObject -Property @{
-					    VMname = $E.VM.Name
-					    Date = $E.CreatedTime
-					    User = $E.UserName
-					    Device = $_.Device.GetType().Name
-					    Operation = $_.Operation
-				    }
+            # ----- $VM can be either the VMName or a VM Object
+            if ( $VM -isnot  [VMware.VimAutomation.ViCore.Impl.V1.VM.UniversalVirtualMachineImpl] ) {
 
-                    Write-Output $Report
-			    }
-		    }
+                if ( $VM -is [System.String]) {
+                    $V = Get-VM -Name $V
+                }
+                Else {
+                    Throw "Get-VMWareVMReconfiguration : Requires a VM object or name."
+                }
+            }
+
+            Write-verbose "Auditing $($V.name)"
+
+            # ----- Get Events for This VM of type VMReconfiguredEvent
+            Get-VMWareEvent -Entity $V -EventType 'VmReconfiguredEvent' | Foreach {
+
+                Write-Verbose "Reconfigure event found" 
+
+                $_.ConfigSpec.DeviceChange | Foreach {
+			        if($_.Device -ne $null){
+				        $Change = New-Object PSObject -Property @{
+					        VMname = $E.VM.Name
+					        Date = $E.CreatedTime
+					        User = $E.UserName
+					        Device = $_.Device.GetType().Name
+					        Operation = $_.Operation
+				        }
+
+                        Write-Output $Change
+			        }
+		        }
+            }
         }
     }
 }
 
 # -------------------------------------------------------------------------------------
 
-function Get-VMWareOrphanedFiles {
+function Get-VMWareMotionHistory {
+
+<#   
+    .SYNOPSIS  
+        Returns the vMotion/svMotion history    
+    
+    .DESCRIPTION 
+        The function will return information on all
+        the vMotions and svMotions that occurred over a specific
+        interval for a defined number of virtual machines 
+    
+    .NOTES  
+        Author:  Luc Dekens 
+        Update : Jeff Buenting
+
+        I changed this script quite a bit.  Removed all of the formatting.  I felt it should return the same type of object as the Get-VMWareEvent did.  I also changed the date parameters to again
+        match up with the Get-VMWareEvent.
+          
+    .PARAMETER Entity
+       The vSphere entity. This can be one more virtual machines,
+       or it can be a vSphere container. If the parameter is a
+        container, the function will return the history for all the
+       virtual machines in that container. 
+ 
+    .PARAMETER Start
+       The start date of the events to retrieve 
+       Defaults to one day ago. ( -1 )
+
+    .PARAMETER Finish
+       The end date of the events to retrieve.
+       Defaults to current date/time. 
+
+    .PARAMETER Recurse
+       A switch indicating if the events for the children of
+       the Entity will also be returned 
+    
+    .EXAMPLE
+       PS> Get-MotionHistory -Entity $vm -Days 1
+    
+    .EXAMPLE
+       PS> Get-MotionHistory -Entity $cluster -Sort:$false
+    
+    .EXAMPLE
+       PS> Get-Datacenter -Name $dcName |
+       >> Get-MotionHistory
+
+    .LINK
+        http://www.lucd.info/2013/03/31/get-the-vmotionsvmotion-history/
+#>
+ 
+    [CmdletBinding()]
+    param(   
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true)]
+        [VMware.VimAutomation.ViCore.Impl.V1.Inventory.InventoryItemImpl[]]$Entity,
+        
+        [DateTime]$Start = ((Get-Date).AddDays(-1)),
+        
+        [DateTime]$Finish = (Get-Date),
+        
+        [switch]$Recurse = $false,
+
+        [switch]$Sort = $true
+    )
+ 
+    begin{
+    $history = @()
+        
+    $eventTypes = "DrsVmMigratedEvent","VmMigratedEvent"
+    }
+ 
+    process{
+        Write-Output (Get-VMWareEvent -Entity $entity -Start $start -Finish $Finish -EventType $eventTypes -Recurse:$Recurse)
+    }
+ 
+}
+
+# -------------------------------------------------------------------------------------
+# DataStore Functions
+# -------------------------------------------------------------------------------------
+
+
+function Get-VMWareOrphanedFile {
 
 <#
     .SYNOPSIS
@@ -199,14 +716,14 @@ function Get-VMWareOrphanedFiles {
                 }
 
                 # ----- Remove files from the list belonging to existing VMs
-                Get-VM -Datastore $ds #| Foreach {
-               #     write-verbose "VM = $($_ | out-string)"
-               #     $_.ExtensionData.LayoutEx.File | Foreach {
-               #         if($fileTab.ContainsKey($_.Name)){
-               #             $fileTab.Remove($_.Name)
-               #         }
-               #     }
-               # }
+                Get-VM -Datastore $ds | Foreach {
+                    write-verbose "VM = $($_ | out-string)"
+                    $_.ExtensionData.LayoutEx.File | Foreach {
+                        if($fileTab.ContainsKey($_.Name)){
+                            $fileTab.Remove($_.Name)
+                        }
+                    }
+                }
  
                 # ----- Remove files from the list belonging to existing Templates
                 Get-Template -ErrorAction Stop | where {$_.DatastoreIdList -contains $ds.Id} | %{
@@ -255,6 +772,8 @@ function Get-VMWareOrphanedFiles {
         }
     }
 }
+
+
 
 
 

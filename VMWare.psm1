@@ -773,7 +773,98 @@ function Get-VMWareOrphanedFile {
     }
 }
 
+# -------------------------------------------------------------------------------------
+# Log Functions
+# -------------------------------------------------------------------------------------
 
+Function Get-VMWareHostLogList {
+
+<#
+    .SYNOPSIS
+        Retrieves a list of existing log files on an ESX host.
+
+    .DESCRIPTION
+        This function is used to obtain a list of log files located in the default location of a VMWare ESX server (/var/log/)
+
+    .PARAMETER SSHSession
+        SSHSession object created with POSH SSH New-SSHSession
+
+    .EXAMPLE
+        List all logs on server $Server.
+
+        $SSH = New-SSHSession -ComputerName $Server -Credential $RootCred --AcceptKey -KeepAliveInterval 5
+        $LogNames = Get-VMWareHostLogList -SSHSession $SSH
+
+    .Notes
+        Requires POSH SSH
+
+        Author : Jeff Buenting
+        Date : 2019 JAN 29
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter (Mandatory = $True, ValueFromPipeline = $True)]
+        [SSH.SshSession[]]$SSHSession
+    )
+
+    Process {
+        Foreach ( $S in $SSHSession ) {
+            Write-Verbose "Retrieving List of Log files from $($S.Host)"
+
+            Write-Output (invoke-sshcommand -SessionId $ssh.SessionID -Command "ls var/log/*.log")
+        }
+    }
+}
+
+#--------------------------------------------------------------------------------------
+
+Function Get-VMWareHostLogList {
+
+<#
+    .SYNOPSIS
+        Retrieves the log file data from an ESX server.
+
+    .DESCRIPTION
+        This function is used to obtain the data entries in a VMWare ESX host server log file.
+
+    .PARAMETER SSHSession
+        SSHSession object created with POSH SSH New-SSHSession
+
+    .PARAMETER LogName
+        Name of the log to retrieve.
+
+    .EXAMPLE
+        Retrieve the FDM.Log data from $Server.
+
+        $SSH = New-SSHSession -ComputerName $Server -Credential $RootCred -AcceptKey -KeepAliveInterval 5
+        $Log = Get-VMWareHostLog -SSHSession $SSH -LogName FDM.Log
+
+    .Notes
+        Requires POSH SSH
+
+        Author : Jeff Buenting
+        Date : 2019 JAN 29
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter (Mandatory = $True)]
+        [SSH.SshSession]$SSHSession,
+
+        [Parameter (Mandatory = $True)]
+        [String]$LogName
+
+    )
+
+    Process {
+        Foreach ( $L in $LogName ) {
+            Write-Verbose "Retrieving Log file $L from $($S.Host)"
+
+            Write-Output (invoke-sshcommand -SessionId $ssh.SessionID -Command "cat var/log/$L")
+        }
+    }
+}
 
 
 

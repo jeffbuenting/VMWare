@@ -540,5 +540,42 @@ InModuleScope $ModuleName {
 
     }
 
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Get-VMWareHostLogList" -Tags DataStore {
+
+        Mock -Command Invoke-SSHCommand -Mockwith {
+            Return ("file.log","text.log")
+        }
+
+        Context Output {
+
+            IT "Should return a list of files" {
+                
+            }
+
+        }
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Get-VMWareHostLogList" -Tags DataStore {
+
+        Mock -Command Invoke-SSHCommand -Mockwith {
+            Return "Error Log"
+        }
+
+        Context Output {
+
+            IT "Should return a text doc" {
+                
+            }
+
+        }
+    }
 
 }

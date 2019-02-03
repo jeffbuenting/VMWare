@@ -819,7 +819,7 @@ Function Get-VMWareHostLogList {
 
 #--------------------------------------------------------------------------------------
 
-Function Get-VMWareHostLogList {
+Function Get-VMWareHostLog {
 
 <#
     .SYNOPSIS

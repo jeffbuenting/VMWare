@@ -578,4 +578,12 @@ InModuleScope $ModuleName {
         }
     }
 
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Descripe "$ModuleName : Test-VMWareHostConnection" -Tags Tools {
+        
+    }
+
 }

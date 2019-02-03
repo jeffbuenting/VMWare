@@ -866,5 +866,110 @@ Function Get-VMWareHostLogList {
     }
 }
 
+# -------------------------------------------------------------------------------------
+# Misc Tools
+# -------------------------------------------------------------------------------------
+
+Function Test-VMWareHostConnection {
+
+<#
+    .SYNOPSIS 
+        VMKping or ping via ESXCLI
+
+    .DESCRIPTION
+        I got tired of doing this manually so I created this function to  build and do it for me. It will ping using either ESXCLI or VMKPing via SSH.
+
+    .PARAMETER VMHost
+        IP of the host to ping from.
+
+    .PARAMETER IPAddress
+        IP of the destination that is being pinged.
+
+    .PARAMETER SSH
+        SSH Session object for the VMHost.  Obtained with using New-SSHSession from Posh-SSH.
+
+    .PARAMETER VMKernelPort
+        VMKernel Interface the ping will be sent out.
+
+    .PARAMETER Count
+        Number of pings.
+
+    .EXAMPLE
+        Ping by SSH into Host.
+
+        $RootCred = get-credential
+
+        $SSH = New-SSHSession -ComputerName $Server -Credential $RootCred -AcceptKey -KeepAliveInterval 5
+
+        $Result = Test-vmwarehostconnection -SSH $SSH -IPAddress 192.168.1.85 -VMKernelPort vmk3 -Verbose
+
+        $Result.output
+
+        Remove-SSHSession $SSH
+
+    .NOTES
+        Requires the POSH SSH Module
+
+        Author : Jeff Buenting
+        Date : 2019 JAN 31
+
+#>
+
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
+    Param (
+        [Parameter (ParameterSetName = 'Default',Mandatory = $True,ValueFromPipeline = $True)]
+        [PSObject]$VMHost,
+
+        [Parameter (ParameterSetName = 'Default')]
+        [Parameter (ParameterSetName = 'VMKPing')]
+        [String[]]$IPAddress,
+
+        [Parameter (ParameterSetName = 'VMKPing',Mandatory = $True)]
+        [SSH.SshSession]$SSH,
+
+        [Parameter (ParameterSetName = 'Default')]
+        [Parameter (ParameterSetName = 'VMKPing')]
+        [String]$VMKernelPort,
+
+        [Parameter (ParameterSetName = 'Default')]
+        [Parameter (ParameterSetName = 'VMKPing')]
+        [String]$Count = 4
+    )
+
+    if ( $PSCmdlet.ParameterSetName -eq 'VMKPing' ) {
+        Write-verbose "Ping via SSH and VMKPing"
+
+        $Options = "-c $Count"
+
+        # ----- VMKernel is case sensitive and all lower case
+        if ( $VMKernelPort ) { $Options = "$Options -I $($VMKernelPort.ToLower())" }
+
+        Write-Verbose "vmkping $Options $IPAddress"
+        $Result = invoke-sshcommand -SessionId $ssh.SessionID -Command "vmkping $Options $IPAddress"
+    }
+    Else {
+        Write-verbose "Ping via ESXCLI"
+
+        $EsxCli = Get-EsxCli -VMHost $VMHost -V2
+
+        # ----- Configure arguments for command
+        $params = $esxcli.network.diag.ping.createArgs()
+        $Params.Host = $IPAddress
+        $Params.Count = $Count
+        if ( $VMKernelPort ) { $Params.interface = $VMKernelPort }
+
+        Try {
+            $Result = $EsxCli.network.diag.ping.invoke($Params)
+        }
+        Catch {
+            $ExceptionMessage = $_.Exception.Message
+            $ExceptionType = $_.Exception.GetType().Fullname
+            Throw "Test-VMWareHostConnection : Error attempting to ping via ESXCLI.`n`n     $ExceptionMessage`n`n $ExceptionType"
+        }
+    }
+
+    Write-output $Result
+}
+
 
 

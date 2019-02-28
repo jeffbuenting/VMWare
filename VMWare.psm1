@@ -812,7 +812,9 @@ Function Get-VMWareHostLogList {
         Foreach ( $S in $SSHSession ) {
             Write-Verbose "Retrieving List of Log files from $($S.Host)"
 
-            Write-Output (invoke-sshcommand -SessionId $ssh.SessionID -Command "ls var/log/*.log")
+            $Result = invoke-sshcommand -SessionId $ssh.SessionID -Command "ls var/log/*.log"
+
+            Write-output $Result.output
         }
     }
 }
@@ -971,5 +973,355 @@ Function Test-VMWareHostConnection {
     Write-output $Result
 }
 
+# -------------------------------------------------------------------------------------
+# Share functions
+# -------------------------------------------------------------------------------------
+
+Function Get-VMWareResourceShare {
+    
+<#
+    .SYNOPSIS
+        Returns an object with the shares and resource percentages.
+ 
+    .DESCRIPTION
+        Returns a list of object with resource share values.
+ 
+    .PARAMETER Cluster
+        Name or object of a cluster that we want to obtain share info.
+ 
+    .PARAMETER ResourcePool
+        Name or object of a resource pool that we want to obtain share info.
+ 
+    .EXAMPLE
+        Return Share info for CLUSTER
+ 
+        Get-VMWareResourceShare -Cluster CLUSTER
+ 
+    .NOTES
+        Author : Jeff Buenting
+        Date : 2019 FEB 26
+#>
+ 
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True,ParameterSetName = 'Cluster' ) ]
+        [PSObject]$Cluster,
+ 
+        [Parameter ( Mandatory = $True,ParameterSetName = "ResourcePool" ) ]
+        [PSObject]$ResourcePool,
+ 
+        [Parameter ( ParameterSetName = "ResourcePool" ) ]
+        [PSObject]$VMHostName = '*',
+ 
+        [Parameter ( Mandatory = $True,ParameterSetName = "VMHost" ) ]
+        [PSObject]$VMHost
+    )
+ 
+    Switch ( $PSCmdlet.ParameterSetName ) {
+        'Cluster' {
+ 
+            Write-Verbose "Cluster Parameter Set"
+ 
+            if ( $Cluster.GetType().Name -ne 'VMware.VimAutomation.ViCore.Impl.V1.Inventory.ClusterImpl' ) {
+                Write-Verbose "geting cluster object"
+ 
+                $Cluster = Get-cluster -name $Cluster
+            }
+ 
+            # ----- Get Child resource pools
+            $Cluster | Get-ResourcePool | where Parent -like Resources | foreach {
+                Write-Verbose "Getting Shares for $($_.Name)"
+                $Obj = New-Object -TypeName PSObject -Property (@{
+                    Name = $_.Name 
+                    CpuSharesLevel = $_.CPUSharesLevel
+                    MemSharesLevel = $_.MemSharesLevel
+                    NumCPUShares = $_.NumCPUShares
+                    NumMemShares = $_.NumMemShares
+                    ResourceType = 'ResourcePool'
+                    Parent = $_.parent
+                })   
+ 
+                # ----- Get Children of the child resource pool
+                $ChildResources =  Get-VMWareResourceShare -ResourcePool $_.Name 
+ 
+                if ( $ChildResources ) {
+                    Write-Verbose "Resource has Children"
+ 
+                    Write-Output $ChildResources
+                    
+                    Write-Verbose $($Obj | Out-String )
+ 
+                    Write-Output $Obj 
+                }
+                Else {
+                    Write-Verbose "Resource has no Children."
+                }
+            }
+ 
+            # ----- Get VMs in this Resource pool (Resources)
+            $Cluster | Get-VM | where { ($_.ResourcePool -like 'Resources') -and ($_.PoweredState -ne 'PoweredOff')} | foreach {
+                $R = $_ | Get-VMResourceConfiguration 
+                Write-Verbose "Getting Shares for $($_.Name)"
+                $Obj = New-Object -TypeName PSObject -Property (@{
+                    Name = $R.VM 
+                    CpuSharesLevel = $R.CPUSharesLevel
+                    MemSharesLevel = $R.MemSharesLevel
+                    NumCPUShares = $R.NumCPUShares
+                    NumMemShares = $R.NumMemShares
+                    ResourceType = 'VM'
+                    Parent = $_.ResourcePool
+                }) 
+ 
+                Write-Verbose $($Obj | Out-String )
+ 
+                Write-Output $Obj
+ 
+                Write-Verbose "-----VM"
+            }  
+        }
+ 
+        'ResourcePool' {
+            Write-Verbose "Resource Pool Parameter Set"
+ 
+            if ( $ResourcePool.GetType().Name -ne 'VMware.VimAutomation.ViCore.Impl.V1.Inventory.ResourcePoolImpl' ) {
+                Write-Verbose "geting Resource Pool object for $ResourcePool"
+ 
+                $ResourcePool = Get-ResourcePool -Name $ResourcePool
+            }
+ 
+            Write-Verbose $($ResourcePool | out-string)
+ 
+            $ResourcePool | Get-ResourcePool | where Parent -like $ResourcePool.Name | foreach {
+                Write-Verbose "Getting Shares for $($_.Name) on $VMHostName"
+                $Obj = New-Object -TypeName PSObject -Property (@{
+                    Name = $_.Name 
+                    CpuSharesLevel = $_.CPUSharesLevel
+                    MemSharesLevel = $_.MemSharesLevel
+                    NumCPUShares = $_.NumCPUShares
+                    NumMemShares = $_.NumMemShares
+                    ResourceType = 'ResourcePool'
+                    Parent = $_.parent
+                })   
+ 
+                # ----- Get Children of the child resource pool
+                $ChildResources =  Get-VMWareResourceShare -ResourcePool $_.Name -VMHostName $VMHostName
+ 
+                if ( $ChildResources ) {
+                    Write-Verbose "Resource has Children"
+ 
+                    Write-Output $ChildResources
+                    
+                    Write-Verbose $($Obj | Out-String )
+ 
+                    Write-Output $Obj 
+                }
+                Else {
+                    Write-Verbose "Resource has no Children."
+                }
+            }
+ 
+            # ----- Get VMs in this Resource pool (Resources)
+            $ResourcePool | Get-VM | where { ($_.ResourcePool -like $ResourcePool.Name) -and ($_.VMHost -Like $VMHostName) -and ($_.PoweredState -ne 'PoweredOff')} | foreach {
+                Write-Verbose "Getting VM Object info "
+ 
+                $R = $_ | Get-VMResourceConfiguration 
+                Write-Verbose "Getting Shares for $($_.Name)"
+                $Obj = New-Object -TypeName PSObject -Property (@{
+                    Name = $R.VM 
+                    CpuSharesLevel = $R.CPUSharesLevel
+                    MemSharesLevel = $R.MemSharesLevel
+                    NumCPUShares = $R.NumCPUShares
+                    NumMemShares = $R.NumMemShares
+                    ResourceType = 'VM'
+                    Parent = $_.ResourcePool
+                }) 
+ 
+                Write-Verbose $($Obj | Out-String )
+ 
+                Write-Output $Obj
+ 
+                Write-Verbose "-----VM"
+            }  
+        }
+ 
+        'VMHost' {
+            Write-Verbose "VMHost Parameter Set"
+ 
+            if ( $VMHost.GetType().Name -ne 'VMware.VimAutomation.ViCore.Impl.V1.Inventory.VMHostImpl' ) {
+                Write-Verbose "geting VM Host object for $VMHost"
+ 
+                $VMHost = Get-VMHost -Name $VMHost
+            }
+ 
+            Get-Cluster -VMHost $VMHost | Get-ResourcePool | where Parent -like 'Resources' | foreach {
+                Write-Verbose "Getting Shares for $($_.Name)"
+                $Obj = New-Object -TypeName PSObject -Property (@{
+                    Name = $_.Name 
+                    CpuSharesLevel = $_.CPUSharesLevel
+                    MemSharesLevel = $_.MemSharesLevel
+                    NumCPUShares = $_.NumCPUShares
+                    NumMemShares = $_.NumMemShares
+                    ResourceType = 'ResourcePool'
+                    Parent = $_.parent
+                })   
+ 
+                # ----- Get Children of the child resource pool
+                $ChildResources =  Get-VMWareResourceShare -ResourcePool $_.Name -VMHostName $VMHost.Name 
+ 
+                if ( $ChildResources ) {
+                    Write-Verbose "Resource has Children"
+ 
+                    Write-Output $ChildResources
+                    
+                    Write-Verbose $($Obj | Out-String )
+ 
+                    Write-Output $Obj 
+                }
+                Else {
+                    Write-Verbose "Resource has no Children."
+                }
+ 
+                
+            }
+ 
+            # ----- Get VMs in this Resource pool (Resources)
+            $VMHost | Get-VM | where { ($_.ResourcePool -like 'Resources') -and ($_.PoweredState -ne 'PoweredOff')} | foreach {
+                Write-Verbose "Getting VM Object info"
+ 
+                $R = $_ | Get-VMResourceConfiguration 
+                Write-Verbose "Getting Shares for $($_.Name)"
+                $Obj = New-Object -TypeName PSObject -Property (@{
+                    Name = $R.VM 
+                    CpuSharesLevel = $R.CPUSharesLevel
+                    MemSharesLevel = $R.MemSharesLevel
+                    NumCPUShares = $R.NumCPUShares
+                    NumMemShares = $R.NumMemShares
+                    ResourceType = 'VM'
+                    Parent = $_.ResourcePool
+                }) 
+ 
+                Write-Verbose $($Obj | Out-String )
+                
+                Write-Output $Obj
+ 
+                Write-Verbose "-----VM"
+            }  
+        }
+    }
+}
+ 
+# ---------------------------------------------------------------------------------------
+ 
+Function CalculateVMWareResourceSharePercentageHelper {
+    
+<#
+    .SYNOPSIS
+        Helper function to recursively calculate
+ 
+    .NOTE
+        Helper Function
+#>
+ 
+    [CmdletBinding()]
+    param (
+        [PSObject]$Groups,
+ 
+        [String]$Root,
+ 
+        [String]$ParentCPUPercentage = 100,
+ 
+        [String]$ParentMEMPercentage = 100
+    )
+    
+    # ----- Determine if there are any Resource pool children
+    $Parent = $Root      
+ 
+    Write-Verbose "Parent = $Parent"
+ 
+    if ( ($Groups | Where Name -eq $Parent).Group.count -gt 0 ) {
+ 
+        # ----- Process items in each group
+        $TotCPUShares = ( $Groups | where Name -eq $Parent).Group | Measure-Object -Property NumCPUShares -Sum | Select-object -ExpandProperty sum
+        $TotMemShares = ( $Groups | Where Name -eq $Parent).Group | Measure-Object -Property NumMemShares -Sum | Select-object -ExpandProperty sum
+ 
+        Write-Verbose "TotalCPUShares = $TotCPUShares"
+        Write-Verbose "TotalMEMShares = $TotMEMShares"
+ 
+        ($Groups | Where Name -eq $Parent).Group | Foreach {
+             
+            $G = $_
+            # ----- this calc finds the percentage a resource has of the Resource pool.  so it is a percentage of a percentage of total.
+            $G | Add-Member -MemberType NoteProperty -Name CPUPercent -Value ((($G.NumCPUShares / $TotCPUShares) * 100 ) * ($ParentCPUPercentage/100)) -Force
+            $G | Add-Member -MemberType NoteProperty -Name MemPercent -Value ((($G.NumMemShares / $TotMemShares) * 100 ) * ($ParentMEMPercentage/100)) -Force
+ 
+            Write-Output $G
+ 
+            if ( $G.ResourceType -eq 'ResourcePool' ) {
+                 Write-Output (CalculateVMWareResourceSharePercentageHelper -Groups $Groups -Root $G.Name -ParentCPUPercentage $G.CPUPercent -ParentMEMPercentage $G.MEMPercent)
+            }
+ 
+        }
+ 
+    }
+}
+ 
+# ---------------------------------------------------------------------------------------
+ 
+Function Find-VMWareResourceSharePercentage {
+ 
+<#
+    .SYNOPSIS
+        Calculates the Share Percentage for each level
+ 
+    .DESCRIPTION
+        Calculates the share percentages for each resource.
+ 
+    .PARAMETER Resource
+        Resource object created with Get-VMWareResourceShare
+ 
+    .PARAMETER Root
+        Hierarchy Root.  By default this is the hidden resource pool, Resources.  By including this you have the option to calculate using any Resource pool as the root.
+ 
+    .EXAMPLE
+        retireve VM share percentages from one vmware host in a cluster.
+ 
+        Get-VMWareResourceShare -VMHost ESXI02 | Find-VMWareesourceSharepercentage
+ 
+    .NOTE
+        This function and the helper CalculateVMWareResourceSharePercentageHelper function have been split up as we need all resource objects prior to calculations.  The only way I could figure out how to accomplish this was with the functions being split
+        and when the objects are piped in collecting them and performing the calculations afterwards.
+ 
+    .NOTE
+        Author : Jeff Buenting
+        Date: 2019 FEB 27
+ 
+#>
+ 
+    [CmdletBinding()]
+    param (
+        [Parameter (Mandatory = $True, ValueFromPipeline = $True)]
+        [PSObject]$Resource,
+ 
+        [String]$Root = 'Resources'
+    )
+ 
+    Begin {
+        $Resources =@()
+    }
+ 
+    Process {
+        # ----- Collect all Resources from the pipeline
+        $Resources += $Resource
+    }
+ 
+    End {
+        # ----- Separate by level and calculate shares
+        write-verbose "Grouping collected Resources"
+        $Groups = $Resources | Group-Object -Property Parent 
+ 
+        Write-Output (CalculateVMWareResourceSharePercentageHelper -Groups $Groups -Root $Root -Verbose:$VerbosePreference) 
+        
+    }
+} 
 
 

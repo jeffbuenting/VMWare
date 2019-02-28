@@ -586,4 +586,27 @@ InModuleScope $ModuleName {
         
     }
 
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Descripe "$ModuleName : Get-VMWareResourceShare" -Tags Tools {
+        
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Descripe "$ModuleName : CalculateVMWareResourceSharePercentageHelper" -Tags Tools {
+        
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Descripe "$ModuleName : Find-VMWareResourceSharePercentage" -Tags Tools {
+        
+    }
 }

@@ -69,7 +69,8 @@ Copyright = '(c) 2018 600990. All rights reserved.'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = '*'
+# ---- modified this so that only Vert-Noun functions will get exported.  helper functions should not include the -
+FunctionsToExport = '*-*'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

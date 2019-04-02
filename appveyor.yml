@@ -13,7 +13,7 @@ environment:
 branches:
   # whitelist
   only:
-    - dev
+    - master
 
     
 install:
@@ -48,9 +48,9 @@ on_success:
   - ps: Update-ModuleManifest -Path VMWare.psd1 -ModuleVersion $env:APPVEYOR_BUILD_VERSION
   
   # ----- Push back to Github
-  - git checkout master
+  - git checkout dev
   - git add --all
   - git status
   - git commit -s -m "Update Readme and Manifest Version"
-  - git push origin master
+  - git push origin dev
   

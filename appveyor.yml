@@ -9,11 +9,6 @@ environment:
   access_token:
     secure: EJ2HHF0klBsYS3WlZWIvcc88u5/gixju8bcOR4d13x6Fh+BA7UNU89/NPkHYP6JN
 
-# branches to build
-branches:
-  # whitelist
-  only:
-    - dev
 
     
 install:
@@ -43,7 +38,17 @@ on_success:
   - git config --global user.email "jeffbuenting@gmail.com"
   - git config --global user.name "jeffbuenting"
   - ps: $Readme = Get-Content readme.md
-  - ps: '$Readme -replace "Version: \d*\.\d*\.\d*","Version: $env:APPVEYOR_BUILD_VERSION" | Set-Content README.md'
+
+# Branch Specific
+for:
+
+branches:
+  only:
+    - dev
+
+  - ps: '$Readme -replace "Version: \d*\.\d*\.\d*","Version: $env:APPVEYOR_BUILD_VERSION"'
+  - ps: '$Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)"'
+  - ps: Set-Content README.md
   
   # ----- Update the module manifests version
   - ps: Update-ModuleManifest -Path VMWare.psd1 -ModuleVersion $env:APPVEYOR_BUILD_VERSION
@@ -55,4 +60,19 @@ on_success:
   - git status --branch
   - git commit -s -m "Update Readme and Manifest Version"
   - git push origin dev
+  
+branches:
+  only:
+    - master
+  
+  - ps: '$Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)"'
+  - ps: Set-Content README.md
+
+  # ----- Push back to Github
+  
+  - git checkout master
+  - git add --all
+  - git status --branch
+  - git commit -s -m "Update Readme and Manifest Version"
+  - git push origin master
   

@@ -13,7 +13,7 @@ environment:
 branches:
   # whitelist
   only:
-    - master
+    - dev
 
     
 install:
@@ -36,7 +36,7 @@ test_script:
 on_success:
   # ----- Enable Git Credential Store and add token
   - git config --global credential.helper store
-  - git checkout dev
+  
 
   # ----- Update Readme.md Version number
   - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
@@ -50,6 +50,7 @@ on_success:
   
   # ----- Push back to Github
   
+  - git checkout dev
   - git add --all
   - git status --branch
   - git commit -s -m "Update Readme and Manifest Version"

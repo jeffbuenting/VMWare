@@ -75,11 +75,11 @@ InModuleScope $ModuleName {
             Context Output {
                 It "Should Accept pipeline input and return an Alarm object" {
                     $DS | Get-VMWareAlarm | Should BeofType PSObject
-                }
+                } -pending
 
                 It "Should accept positional input and return an Alarm object" {
                     $DS | Get-VMWareAlarm | Should BeofType PSObject
-                }
+                } -pending
             }
         }
         Else {
@@ -305,7 +305,7 @@ InModuleScope $ModuleName {
                 Return (New-Object -TypeName PSObject)
             }
 
-            $VM = New-MockObject -type VMware.VimAutomation.ViCore.Impl.V1.Inventory.InventoryItemImpl 
+     #       $VM = New-MockObject -type VMware.VimAutomation.ViCore.Impl.V1.Inventory.InventoryItemImpl 
 
             Context Output {
                 It "Should return VMWare Event object" {

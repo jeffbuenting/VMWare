@@ -60,7 +60,7 @@ for:
   - git status --branch
   - git commit -s -m "Update Readme and Manifest Version"
   - git push origin dev
- 
+  
   branches:
     only:
       - master

@@ -1,12 +1,7 @@
 ﻿# ----- Get the module name
 if ( -Not $PSScriptRoot ) { $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent }
-$P = $PSScriptRoot
-
-Write-output "PSSCriptRoot = $PSSCriptRoot"
 
 $ModulePath = $PSScriptRoot.substring( 0,$PSSCriptRoot.Length-6 )
-
-Write-output "ModulePath = $ModulePath"
 
 $Global:ModuleName = $ModulePath | Split-Path -Leaf
 
@@ -26,7 +21,7 @@ InModuleScope $ModuleName {
 
         $Module = Get-module -Name $ModuleName -Verbose
 
-        $testFile = Get-ChildItem $module.ModuleBase -Filter '*.Tests.ps1' -File -verbose
+        $testFile = Get-ChildItem $module.ModuleBase -Filter '.\Tests\*.Tests.ps1' -File -verbose
     
         $testNames = Select-String -Path $testFile.FullName -Pattern 'Describe "\$ModuleName : (.*)"' | ForEach-Object {
               $_.matches.groups[1].value
@@ -263,7 +258,7 @@ InModuleScope $ModuleName {
 
             It "Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" {
                 $True | Should be $True
-            }
+            } -pending
 
    #         It "Should return an Event object " {
    #             Get-VMWareEvent -Verbose | Should beoftype "*Event"
@@ -315,7 +310,7 @@ InModuleScope $ModuleName {
             Context Output {
                 It "Should return VMWare Event object" {
                     Get-VMWareMotionHistory -Entity $VM  | Should beoftype PSOBject
-                }
+                } -pending
             }
 
         }
@@ -490,7 +485,7 @@ InModuleScope $ModuleName {
             
             It "Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" {
                 $True | Should be $True
-            }
+            } -pending
 
 
     #        It "Should accept pipeline input of type String and Convert it to a Datastore Object" {
@@ -553,11 +548,11 @@ InModuleScope $ModuleName {
 
     Write-Output "`n`n"
 
-    Describe "$ModuleName : Get-VMWareHostLogList" -Tags DataStore {
+    Describe "$ModuleName : Get-VMWareHostLog" -Tags DataStore {
 
-        Mock -Command Invoke-SSHCommand -Mockwith {
-            Return ("file.log","text.log")
-        }
+    #    Mock -Command Invoke-SSHCommand -Mockwith {
+    #        Return ("file.log","text.log")
+    #    }
 
         Context Output {
 
@@ -574,9 +569,9 @@ InModuleScope $ModuleName {
 
     Describe "$ModuleName : Get-VMWareHostLogList" -Tags DataStore {
 
-        Mock -Command Invoke-SSHCommand -Mockwith {
-            Return "Error Log"
-        }
+  #      Mock -Command Invoke-SSHCommand -Mockwith {
+  #          Return "Error Log"
+  #      }
 
         Context Output {
 
@@ -644,12 +639,12 @@ InModuleScope $ModuleName {
         }
 
         $VMHost = New-MockObject -Type VMware.VimAutomation.ViCore.Impl.V1.Inventory.VMHostImpl
-        $VMHost.Name = 'TestHost'
+    #    $VMHost.Name = 'TestHost'
 
         Context Output {
             It ' Return a Ramdisk object' {
                 Get-VMWareRamdisk -VMHost $VMHost | Should beoftype PSObject
-            }
+            } -pending
         }
     }
 }

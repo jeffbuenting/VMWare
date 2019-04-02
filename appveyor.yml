@@ -39,13 +39,13 @@ on_success:
   - git config --global user.name "jeffbuenting"
   - ps: $Readme = Get-Content readme.md
 
-# Branch Specific
-
+  # Branch Specific
+  for:
   
+    branches:
+      only:
+        - master
 
-  branches:
-    only:
-      - master
   
   - ps: '$Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)"'
   - ps: Set-Content README.md

@@ -1,14 +1,21 @@
 ﻿# ----- Get the module name
 if ( -Not $PSScriptRoot ) { $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent }
+$P = $PSScriptRoot
 
-$ModulePath = $PSScriptRoot
+Write-output "PSSCriptRoot = $PSSCriptRoot"
+
+$ModulePath = $PSScriptRoot.substring( 0,$PSSCriptRoot.Length-6 )
+
+Write-output "ModulePath = $ModulePath"
 
 $Global:ModuleName = $ModulePath | Split-Path -Leaf
+
+Write-Output "ModuleName = $ModuleName"
 
 # ----- Remove and then import the module.  This is so any new changes are imported.
 Get-Module -Name $ModuleName -All | Remove-Module -Force
 
-Import-Module "$ModulePath\$ModuleName.PSD1" -Force -ErrorAction Stop  
+Import-Module "$ModulePath\$ModuleName.PSD1" -Force -ErrorAction Stop 
 
 InModuleScope $ModuleName {
 
@@ -135,6 +142,8 @@ InModuleScope $ModuleName {
     Describe "$ModuleName : Get-VMWareEvent" -Tags Event {
 
         # ----- Mocks
+        Mock -CommandName Get-Datacenter -MockWith {}
+
 
         Mock -Command Get-View -ParameterFilter { $ID -eq 'EventManager' } -MockWith {
             $OBJ = @{}
@@ -240,7 +249,7 @@ InModuleScope $ModuleName {
         Context Execution {
             It "Should throw an error if there is one" {
                 { Get-VMWareEvent } | Should Throw
-            }
+            } -Pending
 
             It "Should not throw an error if there is not one" {
                 { Get-VMWareEvent } | Should Not Throw
@@ -582,7 +591,7 @@ InModuleScope $ModuleName {
 
     Write-Output "`n`n"
 
-    Descripe "$ModuleName : Test-VMWareHostConnection" -Tags Tools {
+    Describe "$ModuleName : Test-VMWareHostConnection" -Tags Tools {
         
     }
 
@@ -590,7 +599,7 @@ InModuleScope $ModuleName {
 
     Write-Output "`n`n"
 
-    Descripe "$ModuleName : Get-VMWareResourceShare" -Tags Tools {
+    Describe "$ModuleName : Get-VMWareResourceShare" -Tags Tools {
         
     }
 
@@ -598,7 +607,7 @@ InModuleScope $ModuleName {
 
     Write-Output "`n`n"
 
-    Descripe "$ModuleName : CalculateVMWareResourceSharePercentageHelper" -Tags Tools {
+    Describe "$ModuleName : CalculateVMWareResourceSharePercentageHelper" -Tags Tools {
         
     }
 
@@ -606,7 +615,41 @@ InModuleScope $ModuleName {
 
     Write-Output "`n`n"
 
-    Descripe "$ModuleName : Find-VMWareResourceSharePercentage" -Tags Tools {
+    Describe "$ModuleName : Find-VMWareResourceSharePercentage" -Tags Tools {
         
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Get-VMWareRamdisk" -Tags Tools {
+        Mock -CommandName Get-ESXCLI -MockWith {
+            $RD = [PScustomObject]@{
+                System = [PSCustomObject]@{
+                    visorfs = [PSCustomObject]@{
+                        ramdisk = [PSCustomObject]@{
+                            List = [PSCustomObject]@{
+                                Invoke = [PSCustomObject]@{
+                                    Path = '/tmp'
+                                    FreeSpace = 0
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Return $RD
+        }
+
+        $VMHost = New-MockObject -Type VMware.VimAutomation.ViCore.Impl.V1.Inventory.VMHostImpl
+        $VMHost.Name = 'TestHost'
+
+        Context Output {
+            It ' Return a Ramdisk object' {
+                Get-VMWareRamdisk -VMHost $VMHost | Should beoftype PSObject
+            }
+        }
     }
 }

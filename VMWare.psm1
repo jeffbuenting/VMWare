@@ -1324,4 +1324,48 @@ Function Find-VMWareResourceSharePercentage {
     }
 } 
 
+# ---------------------------------------------------------------------------------------
+
+Function Get-VMWareRamdisk {
+
+<#
+    .SYNOPSIS
+        Retrieves information about the Ramdisk on a VMWARE ESXi host.
+
+    .DESCRIPTION
+        Use this function to gather information about the RAMdisks that are on a VMWare ESXi host.  This information is helpful for troubleshooting.
+
+    .PARAMETER VMHost
+        VMWare Host object.  Use Get-VMHost to obtain this information.
+
+    .EXAMPLE
+        Return all ramdisk info for all vmware hosts.
+
+        Get-VMHost | Get-VMWARERamDisk
+
+    .NOTES
+        Author : Jeff Buenting
+        Date : 2019 APR 01
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter ( Mandatory = $True, ValueFromPipeline = $True )]
+        [VMware.VimAutomation.ViCore.Impl.V1.Inventory.VMHostImpl]$VMHost
+    )
+
+    Process {
+        Foreach ( $H in $VMHost ) {
+            Write-verbose "Getting Ramdisk infor for $($H.Name)"
+
+            $ESXCLI = Get-ESXCLI -VMHost $H.Name -V2
+
+            $RAMDisk = $ESXCLI.system.visorfs.ramdisk.list.invoke()
+
+            $RAMDisk | Add-Member -MemberType NoteProperty -Name VMHost -Value $H.Name
+
+            Write-Output $RAMDisk
+        }
+    }
+}
 

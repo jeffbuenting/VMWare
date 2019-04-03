@@ -42,12 +42,14 @@ on_success:
   # Branch Specific
 for:
 
+  -
     branches:
       only:
         - dev
         
   #- ps: Write-output "dev"
-  
+
+  -  
     branches:
       only:
         - master

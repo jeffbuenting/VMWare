@@ -46,20 +46,7 @@ on_success:
       only:
         - dev
 
-  - ps: '$Readme -replace "Version: \d*\.\d*\.\d*","Version: $env:APPVEYOR_BUILD_VERSION"'
-  - ps: '$Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)"'
-  - ps: Set-Content README.md
-  
-  # ----- Update the module manifests version
-  - ps: Update-ModuleManifest -Path VMWare.psd1 -ModuleVersion $env:APPVEYOR_BUILD_VERSION
-  
-  # ----- Push back to Github
-  
-  - git checkout dev
-  - git add --all
-  - git status --branch
-  - git commit -s -m "Update Readme and Manifest Version"
-  - git push origin dev
+
   
     branches:
       only:

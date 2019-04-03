@@ -47,6 +47,12 @@ on_success:
         - dev
         
   - ps: Write-output "dev"
+  
+    branches:
+      only:
+        - master
+
+  - ps: Write-Output "Master"
  
   
     

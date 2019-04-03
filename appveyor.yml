@@ -46,7 +46,7 @@ on_success:
       only:
         - dev
         
-  -ps: Write-output "dev"
-
+  - ps: Write-output "dev"
+ 
   
     

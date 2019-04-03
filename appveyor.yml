@@ -40,7 +40,7 @@ on_success:
   - ps: $Readme = Get-Content readme.md
 
   # Branch Specific
-for:
+#for:
 
   -
     branches:

@@ -46,7 +46,7 @@ for:
       only:
         - dev
         
-  - ps: Write-output "dev"
+  #- ps: Write-output "dev"
   
     branches:
       only:

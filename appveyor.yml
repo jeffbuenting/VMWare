@@ -54,7 +54,7 @@ for:
       only:
         - master
 
-    ps: Write-Output "Master"
+ #   ps: Write-Output "Master"
  
   
     

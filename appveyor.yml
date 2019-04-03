@@ -51,7 +51,7 @@ on_success:
 
   
   - ps: '$Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)"'
-  - ps: Set-Content README.md
+  - ps: Set-Content -path .\README.md
 
   # ----- Push back to Github
   

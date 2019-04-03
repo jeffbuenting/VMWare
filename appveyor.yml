@@ -42,21 +42,11 @@ on_success:
   # Branch Specific
   - for:
 
-
-
-  
     branches:
       only:
-        - master
+        - dev
+        
+  -ps: Write-output "dev"
 
-  - ps: '$Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)"'
-  - ps: $Readme | Set-Content -path README.md
-
-  # ----- Push back to Github
   
-  - git checkout master
-  - git add --all
-  - git status --branch
-  - git commit -s -m "Update Readme and Manifest Version"
-  - git push origin master
-  
+    

@@ -580,6 +580,63 @@ InModuleScope $ModuleName {
 
     #-------------------------------------------------------------------------------------
 
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Descripe "$ModuleName : Get-VMWareVMLog" -Tags Tools {
+        
+        $VM = [PSCustomObject]@{
+            ExtensionData = [PSCustomObject]@{
+                Config = [PSCustomObject]@{
+                    Files = [PSCustomObject]@{
+                        LogDirectory = '[TestDrive:/]VMName'
+                    }
+                }
+            }
+        }
+        $VM | Add-Member -MemberType ScriptMethod -Name GetType -Value {
+            $Obj = [PSCustomObject]@{
+                Name = 'VM'
+            }
+
+            Write-Output $Obj
+        }
+
+        Mock -CommandName Get-Datacenter -MockWith {
+            $Obj = [PSCustomObject]@{
+                Name = 'DC'
+            }
+            Return $Obj
+        }
+
+        Mock -CommandName Get-DataStore -MockWith {
+        }
+
+        Mock -CommandName Get-Random -MockWith { Return 7 }
+
+        Mock -CommandName New-PSDrive { }
+
+        Mock -CommandName Copy-DatastoreItem {
+            Set-Content -Path 'TestDrive:\log.log' -Value "Test log"
+        }
+
+        Mock -CommandName Remove-PSDrive {}
+
+        Context OUtput {
+            It 'Should create log files when passed a VM object' {
+
+            }
+
+            It 'SHould create log file when passed a VM Name (String)' {
+
+            }
+        }
+    }
+
+
+    #-------------------------------------------------------------------------------------
+
     Write-Output "`n`n"
 
     Descripe "$ModuleName : Test-VMWareHostConnection" -Tags Tools {

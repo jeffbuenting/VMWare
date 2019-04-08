@@ -40,15 +40,14 @@ on_success:
   - ps: $Readme = Get-Content readme.md
 
   # Branch Specific
-#for:
+for:
 
   -
     branches:
       only:
         - dev
     
-    Dev_Script:
-      - ps: Write-output "dev"
+    - ps: Write-output "dev"
 
   -  
     branches:

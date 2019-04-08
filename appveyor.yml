@@ -57,11 +57,11 @@ for:
       - ps: Update-ModuleManifest -Path VMWare.psd1 -ModuleVersion $env:APPVEYOR_BUILD_VERSION
   
       # ----- Push back to Github
-  
+      - git config --global --list
       - git checkout dev
       - git add --all
       - git status --branch
-      - git commit -s -m "Update Readme and Manifest Version"
+      - git commit -a -m "Update Readme and Manifest Version"
       - git push origin dev
   -  
     branches:
@@ -78,7 +78,7 @@ for:
       - git checkout master
       - git add --all
       - git status --branch
-      - git commit -s -m "Update Readme and Manifest Version"
+      - git commit -a -m "Update Readme and Manifest Version"
       - git push origin master
  
   

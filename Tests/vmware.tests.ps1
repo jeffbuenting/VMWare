@@ -588,7 +588,7 @@ InModuleScope $ModuleName {
 
     Write-Output "`n`n"
 
-    Descripe "$ModuleName : Get-VMWareVMLog" -Tags Tools {
+    Describe "$ModuleName : Get-VMWareVMLog" -Tags Tools {
         
         $VM = [PSCustomObject]@{
             ExtensionData = [PSCustomObject]@{
@@ -599,18 +599,26 @@ InModuleScope $ModuleName {
                 }
             }
         }
-        $VM | Add-Member -MemberType ScriptMethod -Name GetType -Value {
-            $Obj = [PSCustomObject]@{
-                Name = 'VM'
-            }
 
-            Write-Output $Obj
-        }
 
-        Mock -CommandName Get-Datacenter -MockWith {
+        Mock -CommandName Get-Datacenter -ParameterFilter { $VM } -MockWith {
             $Obj = [PSCustomObject]@{
                 Name = 'DC'
             }
+            Return $Obj
+        }
+
+        Mock -CommandName Get-VM -MockWith {
+            $obj = [PSCustomObject]@{
+                ExtensionData = [PSCustomObject]@{
+                    Config = [PSCustomObject]@{
+                        Files = [PSCustomObject]@{
+                            LogDirectory = '[TestDrive:/]VMName'
+                        }
+                    }
+                }
+            }
+
             Return $Obj
         }
 
@@ -633,9 +641,11 @@ InModuleScope $ModuleName {
             }
 
             It 'SHould create log file when passed a VM Name (String)' {
-
-            }
-        }
+                
+                Get-VMWareVMLog -VM 'VMName' -Path 'TestDrive:\Log.log' 
+                TestDrive:\Log.log | Should -Exist
+            } -Pending
+        } 
     }
 
 

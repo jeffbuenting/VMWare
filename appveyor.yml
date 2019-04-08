@@ -28,16 +28,7 @@ test_script:
 
   
   
-on_success:
-  # ----- Enable Git Credential Store and add token
-  - git config --global credential.helper store
-  
 
-  # ----- Update Readme.md Version number
-  - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
-  - git config --global user.email "jeffbuenting@gmail.com"
-  - git config --global user.name "jeffbuenting"
-  - ps: $Readme = Get-Content readme.md
 
   # Branch Specific
 for:
@@ -47,7 +38,16 @@ for:
       only:
         - dev
     
-    deploy_script:
+    on_success:
+      # ----- Enable Git Credential Store and add token
+      - git config --global credential.helper store
+  
+
+      # ----- Update Readme.md Version number
+      - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+      - git config --global user.email "jeffbuenting@gmail.com"
+      - git config --global user.name "jeffbuenting"
+      - ps: $Readme = Get-Content readme.md
       - ps: Write-output "dev"
       - ps: '$Readme -replace "Version: \d*\.\d*\.\d*","Version: $env:APPVEYOR_BUILD_VERSION"'
       - ps: '$Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)"'
@@ -61,14 +61,23 @@ for:
       - git checkout dev
       - git add --all
       - git status --branch
-      - git commit -a -m "Update Readme and Manifest Version"
+      - git commit -m "Update Readme and Manifest Version"
       - git push origin dev
   -  
     branches:
       only:
         - master
 
-    deploy_script:
+    on_success:
+      # ----- Enable Git Credential Store and add token
+      - git config --global credential.helper store
+  
+
+      # ----- Update Readme.md Version number
+      - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+      - git config --global user.email "jeffbuenting@gmail.com"
+      - git config --global user.name "jeffbuenting"
+      - ps: $Readme = Get-Content readme.md
       - ps: Write-Output "Master"
       - ps: '$Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)"'
       - ps: $Readme | Set-Content -path README.md
@@ -78,7 +87,7 @@ for:
       - git checkout master
       - git add --all
       - git status --branch
-      - git commit -a -m "Update Readme and Manifest Version"
+      - git commit -m "Update Readme and Manifest Version"
       - git push origin master
  
   

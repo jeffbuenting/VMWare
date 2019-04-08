@@ -46,7 +46,8 @@ on_success:
     branches:
       only:
         - dev
-        
+    
+    Dev_Script:
       - ps: Write-output "dev"
 
   -  

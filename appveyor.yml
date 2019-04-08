@@ -47,7 +47,8 @@ for:
       only:
         - dev
     
-    - ps: Write-output "dev"
+    deploy_script:
+      - ps: Write-output "dev"
 
   -  
     branches:

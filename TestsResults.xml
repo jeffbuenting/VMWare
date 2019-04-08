@@ -1,22 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="13" errors="0" failures="0" not-run="0" inconclusive="10" ignored="0" skipped="0" invalid="0" date="2019-04-02" time="18:53:03">
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="15" errors="0" failures="0" not-run="0" inconclusive="12" ignored="0" skipped="0" invalid="0" date="2019-04-08" time="19:37:57">
   <environment user="appveyor" machine-name="APPVYR-WIN" cwd="C:\projects\vmware" user-domain="APPVYR-WIN" platform="Microsoft Windows Server 2012 R2 Datacenter|C:\windows|\Device\Harddisk0\Partition5" nunit-version="2.5.8.0" os-version="6.3.9600" clr-version="4.0.30319.42000" />
   <culture-info current-culture="en-US" current-uiculture="en-US" />
-  <test-suite type="TestFixture" name="Pester" executed="True" result="Inconclusive" success="True" time="2.6711" asserts="0" description="Pester">
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Inconclusive" success="True" time="3.3357" asserts="0" description="Pester">
     <results>
-      <test-suite type="TestFixture" name="C:\projects\vmware\Tests\vmware.tests.ps1" executed="True" result="Inconclusive" success="True" time="2.6711" asserts="0" description="C:\projects\vmware\Tests\vmware.tests.ps1">
+      <test-suite type="TestFixture" name="C:\projects\vmware\Tests\vmware.tests.ps1" executed="True" result="Inconclusive" success="True" time="3.3357" asserts="0" description="C:\projects\vmware\Tests\vmware.tests.ps1">
         <results>
-          <test-suite type="TestFixture" name="vmware : Module Tests" executed="True" result="Success" success="True" time="0.7917" asserts="0" description="vmware : Module Tests">
+          <test-suite type="TestFixture" name="vmware : Module Tests" executed="True" result="Success" success="True" time="0.9337" asserts="0" description="vmware : Module Tests">
             <results>
-              <test-case description="should have a test for each function" name="vmware : Module Tests.should have a test for each function" time="0.1982" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="should have a test for each function" name="vmware : Module Tests.should have a test for each function" time="0.2379" asserts="0" success="True" result="Success" executed="True" />
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareAlarm" executed="True" result="Inconclusive" success="True" time="0.66" asserts="0" description="vmware : Get-VMWareAlarm">
+          <test-suite type="TestFixture" name="vmware : Get-VMWareAlarm" executed="True" result="Inconclusive" success="True" time="0.7667" asserts="0" description="vmware : Get-VMWareAlarm">
             <results>
-              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="0.0947" asserts="0" description="Execution">
+              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="0.1095" asserts="0" description="Execution">
                 <results />
               </test-suite>
-              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0332" asserts="0" description="Output">
+              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0395" asserts="0" description="Output">
                 <results>
                   <test-case description="Should Accept pipeline input and return an Alarm object" name="vmware : Get-VMWareAlarm.Output.Should Accept pipeline input and return an Alarm object" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
                   <test-case description="Should accept positional input and return an Alarm object" name="vmware : Get-VMWareAlarm.Output.Should accept positional input and return an Alarm object" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
@@ -24,18 +24,18 @@
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Copy-VMWareAlarm" executed="True" result="Success" success="True" time="0.1609" asserts="0" description="vmware : Copy-VMWareAlarm">
+          <test-suite type="TestFixture" name="vmware : Copy-VMWareAlarm" executed="True" result="Success" success="True" time="0.2558" asserts="0" description="vmware : Copy-VMWareAlarm">
             <results>
-              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="0.123" asserts="0" description="Execution">
+              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="0.1971" asserts="0" description="Execution">
                 <results>
-                  <test-case description="Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" name="vmware : Copy-VMWareAlarm.Execution.Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" time="0.0946" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" name="vmware : Copy-VMWareAlarm.Execution.Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" time="0.1511" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareEvent" executed="True" result="Inconclusive" success="True" time="0.1633" asserts="0" description="vmware : Get-VMWareEvent">
+          <test-suite type="TestFixture" name="vmware : Get-VMWareEvent" executed="True" result="Inconclusive" success="True" time="0.1592" asserts="0" description="vmware : Get-VMWareEvent">
             <results>
-              <test-suite type="TestFixture" name="Execution" executed="True" result="Inconclusive" success="True" time="0.0625" asserts="0" description="Execution">
+              <test-suite type="TestFixture" name="Execution" executed="True" result="Inconclusive" success="True" time="0.0263" asserts="0" description="Execution">
                 <results>
                   <test-case description="Should throw an error if there is one" name="vmware : Get-VMWareEvent.Execution.Should throw an error if there is one" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
                   <test-case description="Should not throw an error if there is not one" name="vmware : Get-VMWareEvent.Execution.Should not throw an error if there is not one" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
@@ -48,25 +48,25 @@
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareVMReconfiguration" executed="True" result="Success" success="True" time="0.0499" asserts="0" description="vmware : Get-VMWareVMReconfiguration">
+          <test-suite type="TestFixture" name="vmware : Get-VMWareVMReconfiguration" executed="True" result="Success" success="True" time="0.0536" asserts="0" description="vmware : Get-VMWareVMReconfiguration">
             <results>
-              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="0.0251" asserts="0" description="Execution">
+              <test-suite type="TestFixture" name="Execution" executed="True" result="Success" success="True" time="0.0271" asserts="0" description="Execution">
                 <results>
-                  <test-case description="Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" name="vmware : Get-VMWareVMReconfiguration.Execution.Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" time="0.0035" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" name="vmware : Get-VMWareVMReconfiguration.Execution.Cannot mock PowerCLI Cmdlets ( https://github.com/pester/Pester/issues/803 )" time="0.0038" asserts="0" success="True" result="Success" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareMotionHistory" executed="True" result="Inconclusive" success="True" time="0.0793" asserts="0" description="vmware : Get-VMWareMotionHistory">
+          <test-suite type="TestFixture" name="vmware : Get-VMWareMotionHistory" executed="True" result="Inconclusive" success="True" time="0.0851" asserts="0" description="vmware : Get-VMWareMotionHistory">
             <results>
-              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0204" asserts="0" description="Output">
+              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0227" asserts="0" description="Output">
                 <results>
                   <test-case description="Should return VMWare Event object" name="vmware : Get-VMWareMotionHistory.Output.Should return VMWare Event object" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareOrphanedFile" executed="True" result="Inconclusive" success="True" time="0.1379" asserts="0" description="vmware : Get-VMWareOrphanedFile">
+          <test-suite type="TestFixture" name="vmware : Get-VMWareOrphanedFile" executed="True" result="Inconclusive" success="True" time="0.147" asserts="0" description="vmware : Get-VMWareOrphanedFile">
             <results>
               <test-suite type="TestFixture" name="Execution" executed="True" result="Inconclusive" success="True" time="0.0245" asserts="0" description="Execution">
                 <results>
@@ -75,39 +75,49 @@
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareHostLog" executed="True" result="Inconclusive" success="True" time="0.0487" asserts="0" description="vmware : Get-VMWareHostLog">
+          <test-suite type="TestFixture" name="vmware : Get-VMWareHostLog" executed="True" result="Inconclusive" success="True" time="0.0621" asserts="0" description="vmware : Get-VMWareHostLog">
             <results>
-              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0293" asserts="0" description="Output">
+              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0395" asserts="0" description="Output">
                 <results>
                   <test-case description="Should return a list of files" name="vmware : Get-VMWareHostLog.Output.Should return a list of files" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareHostLogList" executed="True" result="Inconclusive" success="True" time="0.042" asserts="0" description="vmware : Get-VMWareHostLogList">
+          <test-suite type="TestFixture" name="vmware : Get-VMWareHostLogList" executed="True" result="Inconclusive" success="True" time="0.0494" asserts="0" description="vmware : Get-VMWareHostLogList">
             <results>
-              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0163" asserts="0" description="Output">
+              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0202" asserts="0" description="Output">
                 <results>
                   <test-case description="Should return a text doc" name="vmware : Get-VMWareHostLogList.Output.Should return a text doc" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
                 </results>
               </test-suite>
             </results>
           </test-suite>
-          <test-suite type="TestFixture" name="vmware : Test-VMWareHostConnection" executed="True" result="Success" success="True" time="0.0148" asserts="0" description="vmware : Test-VMWareHostConnection">
-            <results />
-          </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareResourceShare" executed="True" result="Success" success="True" time="0.019" asserts="0" description="vmware : Get-VMWareResourceShare">
-            <results />
-          </test-suite>
-          <test-suite type="TestFixture" name="vmware : CalculateVMWareResourceSharePercentageHelper" executed="True" result="Success" success="True" time="0.0583" asserts="0" description="vmware : CalculateVMWareResourceSharePercentageHelper">
-            <results />
-          </test-suite>
-          <test-suite type="TestFixture" name="vmware : Find-VMWareResourceSharePercentage" executed="True" result="Success" success="True" time="0.0154" asserts="0" description="vmware : Find-VMWareResourceSharePercentage">
-            <results />
-          </test-suite>
-          <test-suite type="TestFixture" name="vmware : Get-VMWareRamdisk" executed="True" result="Inconclusive" success="True" time="0.0742" asserts="0" description="vmware : Get-VMWareRamdisk">
+          <test-suite type="TestFixture" name="vmware : Get-VMWareVMLog" executed="True" result="Inconclusive" success="True" time="0.2036" asserts="0" description="vmware : Get-VMWareVMLog">
             <results>
-              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0393" asserts="0" description="Output">
+              <test-suite type="TestFixture" name="OUtput" executed="True" result="Inconclusive" success="True" time="0.0274" asserts="0" description="OUtput">
+                <results>
+                  <test-case description="Should create log files when passed a VM object" name="vmware : Get-VMWareVMLog.OUtput.Should create log files when passed a VM object" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
+                  <test-case description="SHould create log file when passed a VM Name (String)" name="vmware : Get-VMWareVMLog.OUtput.SHould create log file when passed a VM Name (String)" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="vmware : Test-VMWareHostConnection" executed="True" result="Success" success="True" time="0.0168" asserts="0" description="vmware : Test-VMWareHostConnection">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="vmware : Get-VMWareResourceShare" executed="True" result="Success" success="True" time="0.0165" asserts="0" description="vmware : Get-VMWareResourceShare">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="vmware : CalculateVMWareResourceSharePercentageHelper" executed="True" result="Success" success="True" time="0.0696" asserts="0" description="vmware : CalculateVMWareResourceSharePercentageHelper">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="vmware : Find-VMWareResourceSharePercentage" executed="True" result="Success" success="True" time="0.0182" asserts="0" description="vmware : Find-VMWareResourceSharePercentage">
+            <results />
+          </test-suite>
+          <test-suite type="TestFixture" name="vmware : Get-VMWareRamdisk" executed="True" result="Inconclusive" success="True" time="0.0541" asserts="0" description="vmware : Get-VMWareRamdisk">
+            <results>
+              <test-suite type="TestFixture" name="Output" executed="True" result="Inconclusive" success="True" time="0.0199" asserts="0" description="Output">
                 <results>
                   <test-case description=" Return a Ramdisk object" name="vmware : Get-VMWareRamdisk.Output. Return a Ramdisk object" time="0" asserts="0" success="True" result="Inconclusive" executed="True" />
                 </results>

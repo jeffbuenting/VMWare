@@ -48,9 +48,11 @@ for:
       - git config --global user.email "jeffbuenting@gmail.com"
       - git config --global user.name "jeffbuenting"
       - ps: $Readme = Get-Content readme.md
+
       - ps: Write-output "dev version $env:APPVEYOR_BUILD_VERSION"
       - ps: '$Readme = $Readme -replace "Version: \d*\.\d*\.\d*","Version: $env:APPVEYOR_BUILD_VERSION"'
       - ps: '$Readme = $Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)"'
+
       - ps: $Readme | Set-Content -path README.md
   
       # ----- Update the module manifests version
@@ -78,8 +80,10 @@ for:
       - git config --global user.email "jeffbuenting@gmail.com"
       - git config --global user.name "jeffbuenting"
       - ps: $Readme = Get-Content readme.md
+
       - ps: Write-Output "Master version $env:APPVEYOR_BUILD_VERSION"
       - ps: '$Readme = $Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)"'
+
       - ps: $Readme | Set-Content -path README.md
 
       # ----- Push back to Github

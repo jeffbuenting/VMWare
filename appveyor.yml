@@ -82,7 +82,7 @@ for:
       - ps: $Readme = Get-Content readme.md
 
       - ps: Write-Output "Master version $env:APPVEYOR_BUILD_VERSION"
-      - ps: '$Readme = $Readme -replace "[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)","[![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/master?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/master)"'
+      - ps: '$Readme = $Readme -replace "/branch/dev","/branch/master"'
 
       - ps: $Readme | Set-Content -path README.md
 

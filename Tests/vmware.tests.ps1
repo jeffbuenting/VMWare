@@ -546,6 +546,67 @@ InModuleScope $ModuleName {
 
     #-------------------------------------------------------------------------------------
 
+    Describe "$ModuleName : Get-VMWareDataStoreSIOC" {
+
+        Mock -CommandName Get-DataStore -ParameterFilter { $Name } -MockWith {
+            $Obj = [PSCustomObject]@{
+                Name = 'TestDS'
+            }
+
+            Return $Obj
+        }
+
+        # ----- For some reason this does notwork.  The mock is never called it still calls the original function
+        Mock -CommandName Get-View -ParameterFilter { $VIObject } -MockWith {
+
+            $SIOCInfo = [PSCustomObject]@{
+                Enabled = 'False'
+                congestionThresholdMode = 'automatic'
+                CongestionThreshold = 30
+                PercentOfPeakhroughput = 90
+                StatsCollectionEnabled = 'True'
+                ReservationEnabled = 'True'
+                StatsAggregationDisabled = 'True'
+                ReservableIOPSThreshold = $Null
+            }
+
+            Return $SIOCInfo
+        } -Verifiable
+   
+        Context 'Input' {
+            It 'Should accept pipeline input' {
+                Get-VMWaredataStoreSIOC -DataStore 'test' -verbose | Should beoftype PSCustom
+
+                Assert-MockCalled
+            } -Pending
+
+            It 'Should accept an array as input' {
+                Get-VMWaredataStoreSIOC -DataStore 'test' | Should beoftype PSCustom
+            } -Pending
+
+            It 'Should not accept input from objects other than string or vmfsDataStore' {
+                $OBJ = [PSCustomObject]@{ Name = 'test' }
+
+                { $OBJ | Get-VMWareDataStoreSIOC } | Should Throw
+            }
+
+        }
+
+        It "Returns an object with SIOC Information" {
+            Get-VMWaredataStoreSIOC -DataStore 'test' | Should beoftype PSCustom
+        } -Pending
+    }
+
+    #-------------------------------------------------------------------------------------
+
+    Write-Output "`n`n"
+
+    Describe "$ModuleName : Set-VMWareDataStoreSIOC" -Tags Tools {
+        
+    }
+
+    #-------------------------------------------------------------------------------------
+
     Write-Output "`n`n"
 
     Describe "$ModuleName : Get-VMWareHostLog" -Tags DataStore {

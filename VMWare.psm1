@@ -774,6 +774,137 @@ function Get-VMWareOrphanedFile {
 }
 
 # -------------------------------------------------------------------------------------
+
+function Get-VMWareDataStoreSIOC {
+    
+<#
+    .SYSNOPSIS
+        Returns on object with SIOC information from a VMWare Datastore.
+#>
+
+    [CmdletBinding()]
+    Param (
+        # ----- the vmfsdatastore class does not have a 'constructor' so I haven't figured out how to mock it in Pester.  Thus using the Custom object and accepting a string as well.
+        [Parameter (Mandatory = $True,ValueFromPipeline = $True,Position = 0)]
+        [PSObject[]]$DataStore
+    )
+
+    Process {
+        Foreach ( $DS in $DataStore ) {
+
+            # ----- DataStore Ojbect?
+            if ( $DS.GetType().FullName -eq 'VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.VmfsDatastore' ) {
+                Write-Verbose "DataStore Object"
+            }
+            ElseIf ( $DS.GetType().FullName -eq 'System.String' ) {
+                Write-Verbose "DataStore Name.  Getting object"
+
+                $DS = Get-Datastore -Name $DS
+            }
+            Else {
+                Write-Verbose "Unknown object"
+
+                Throw "Get-VMWareDataStore : DataStore needs to be a datastore object or the name of the datastore."
+            }
+
+            Write-Verbose "Getting SIOC info for $($DS.Name)"
+
+            # ----- Convert to View object of the datastore
+            $DSView = Get-View -VIObject $DS
+
+            $SIOCInfo = [PSCustomObject]@{
+                Name = $DS.Name
+                Enabled = $DSView.IORMConfiguration.Enabled
+                congestionThresholdMode = $DSView.IORMConfiguration.CongestionThresholdMode
+                CongestionThreshold = $DSView.IORMConfiguration.CongestionThreshold
+                PercentOfPeakhroughput = $DSView.IORMConfiguration.PercentofPeakThroughput
+                StatsCollectionEnabled = $DSView.IORMConfiguration.StatsCollectionEnabled
+                ReservationEnabled = $DSView.IORMConfiguration.ReservationEnabled
+                StatsAggregationDisabled = $DSView.IORMConfiguration.StatsAggregationDisabled
+                ReservableIOPSThreshold = $DSView.IORMConfiguration.ReservableIopsThreshold
+            }
+
+            Write-Output $SIOCInfo
+        }
+    }
+        
+}
+
+# -------------------------------------------------------------------------------------
+
+function Set-VMWareDataStoreSIOC {
+
+<#
+    .SYNOPSIS
+        Makes changes to a datastores SIOC configuration
+
+    .LINK
+        https://github.com/vmware/PowerCLI-Example-Scripts/blob/master/Scripts/DatastoreSIOCStatistics.ps1
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter (Mandatory = $True,ValueFromPipeline = $True,Position = 0)]
+        [VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.VmfsDatastore[]]$DataStore,
+
+        [Bool]$Enabled,
+
+        [Bool]$StatsOnlyMode
+
+    )
+
+    Process {
+        Foreach ( $DS in $DataStore ) {
+            Write-Verbose "Configuring SIOC info for $($DS.Name)"
+
+            $StorResourceManView = Get-View -id 'StorageResourceManager-StorageResourceManager'
+            
+            $spec = New-Object vmware.vim.storageiormconfigspec
+
+            if ( -Not ([string]::IsNullOrEmpty( $Enabled )) ) {
+
+                if ($Enable) {
+                    Write-Verbose "Enabling SIOC with Stats Collection"
+
+                    $spec.Enabled = $true
+                    $Spec.StatsCollectionEnabled = $True
+
+                } 
+                Else {
+                    Write-Verbose "Disabling SIOC and Stats Collection"
+
+                    $spec.Enabled = $false
+                    $Spec.StatsCollectionEnabled = $False
+                }
+            }
+
+            
+
+            if ( -Not ([string]::IsNullOrEmpty($StatsOnlyMode)) ) {
+                Write-Verbose "StatsOnlyMode = $StatsOnlyMode"
+
+                if ( $StatsOnlyMode ) {
+                    Write-Verbose "Enabling Stats Only Mode"
+
+                    $spec.Enabled = $false
+                    $Spec.StatsCollectionEnabled = $True
+                }
+                Else {
+                    Write-Verbose "Disabling Stats Only Mode (Disable all)"
+
+                    $spec.Enabled = $false
+                    $Spec.StatsCollectionEnabled = $False
+                }
+            }
+
+            Write-Verbose "Saving SIOC Config"
+            $StorResourceManView.ConfigureDatastoreIORM_Task($ds.ExtensionData.MoRef,$spec) | out-null
+        }
+    }
+}
+
+
+# -------------------------------------------------------------------------------------
 # Log Functions
 # -------------------------------------------------------------------------------------
 

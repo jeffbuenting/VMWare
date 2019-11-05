@@ -22,6 +22,7 @@ test_script:
   - ps: install-module vmware.powercli
   - ps: import-module vmware.powercli
 
+  - ps: Get-location
   - ps: $TestResult = Invoke-Pester -Path ".\Tests" -OutputFormat NUnitXml -OutputFile TestsResults.xml -PassThru
   - ps: (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestsResults.xml))
   - ps: if ($TestResult.FailedCount -gt 0) { throw "$($Test.FailedCount) tests failed."}
@@ -71,28 +72,28 @@ for:
         - master
 
     on_success:
-      # ----- Enable Git Credential Store and add token
-      - git config --global credential.helper store
+ #     # ----- Enable Git Credential Store and add token
+ #     - git config --global credential.helper store
   
 
-      # ----- Update Readme.md Version number
-      - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
-      - git config --global user.email "jeffbuenting@gmail.com"
-      - git config --global user.name "jeffbuenting"
-      - ps: $Readme = Get-Content readme.md
+ #     # ----- Update Readme.md Version number
+ #     - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+ #     - git config --global user.email "jeffbuenting@gmail.com"
+ #     - git config --global user.name "jeffbuenting"
+ #     - ps: $Readme = Get-Content readme.md
 
-      - ps: Write-Output "Master version $env:APPVEYOR_BUILD_VERSION"
-      - ps: '$Readme = $Readme -replace "/branch/dev","/branch/master"'
+ #     - ps: Write-Output "Master version $env:APPVEYOR_BUILD_VERSION"
+ #     - ps: '$Readme = $Readme -replace "/branch/dev","/branch/master"'
 
-      - ps: $Readme | Set-Content -path README.md
+ #     - ps: $Readme | Set-Content -path README.md
 
-      # ----- Push back to Github
+ #     # ----- Push back to Github
   
-      - git checkout master
-      - git add --all
-      - git status --branch
-      - git commit -m "Update Readme and Manifest Version"
-      - git push origin master
+ #     - git checkout master
+ #     - git add --all
+ #     - git status --branch
+ #     - git commit -m "Update Readme and Manifest Version"
+ #     - git push origin master
  
   
     

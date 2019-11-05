@@ -47,6 +47,7 @@ InModuleScope $ModuleName {
 
     # ----- -exclude was not working so used the where clause
     Get-ChildItem -path $ModulePath\Tests -Filter *.tests.ps1  | where Name -ne "$ModuleName.Tests.ps1" | foreach {
+        Write-Output "Calling test $($_.FullName)"
         $PesterResults += Invoke-Pester -Script $_.FullName -PassThru
     }
 

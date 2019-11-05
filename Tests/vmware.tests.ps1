@@ -1,7 +1,7 @@
 ﻿# ----- Get the module name
 if ( -Not $PSScriptRoot ) { $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent }
 
-$ModulePath = $PSScriptRoot.trim( '\Tests' )
+$ModulePath = $PSScriptRoot.substring(0,$PSScriptRoot.LastIndexOf('\'))
 
 Write-output "ModulePath = $ModulePath"
 
@@ -13,6 +13,8 @@ Write-Output "ModuleName = $ModuleName"
 Get-Module -Name $ModuleName -All | Remove-Module -Force
 
 Import-Module "$ModulePath\$ModuleName.PSD1" -Force -ErrorAction Stop  
+
+Write-output "A"
 
 InModuleScope $ModuleName {
 

@@ -67,11 +67,11 @@ for:
       - git commit -m "Update Readme and Manifest Version"
       - git push origin dev
   -  
- #   branches:
- #     only:
- #       - master
+    branches:
+      only:
+        - master
 
- #   on_success:
+    on_success:
  #     # ----- Enable Git Credential Store and add token
  #     - git config --global credential.helper store
   

@@ -3,7 +3,7 @@ VMWare powershell module
 
 ### Master
 
-Version: 1.0.90
+Version: 1.0.92
 
 [![Build status](https://ci.appveyor.com/api/projects/status/v6ex7ak8plsoutn5/branch/dev?svg=true)](https://ci.appveyor.com/project/jeffbuenting/vmware/branch/dev)
 

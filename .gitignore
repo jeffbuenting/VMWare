@@ -1,0 +1,2 @@
+# ----- ignore testresults.xml (appveyor pester test results).  This will be auto generated in each branch so will be different.
+TestsResults.xml

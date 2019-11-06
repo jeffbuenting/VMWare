@@ -12,7 +12,7 @@
 RootModule = 'VMWare'
 
 # Version number of this module.
-ModuleVersion = '1.0.95'
+ModuleVersion = '1.0.98'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()

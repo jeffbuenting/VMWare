@@ -1,117 +1,94 @@
 ﻿function Wait-VMWareOSCustomization {
 
+<#
+    .SYSNOPSIS
+        Pauses execution until the OS Customizations have completed.
+
+    .DESCRIPTION
+        When using Powershell to create new VMware VMs and applying an OS Customization, the customization does not get applied until after the VM starts.  It make take awhile depending on the configuration.
+        To prevent powershell from moving on and potentionally causing issues, you need to wait for the customization to finish.
+
+    .PARAMETER VM
+        VM the OS Customizations are being applied.
+
+    .PARAMETER Timeout
+        Timeout failsafe.
+
+    .Example
+        $VM = New-VM -Name ServerA -Template OSTemplate -OSCustomizationSpec 'WIN 2016 Sysprep'
+        $VM = Start-VM -VM $VM
+        Wait-VMWareOSCustomization -VM $VM
+
+    .NOTE
+        I got this from someone else.  Unfortunately I did not capture the link.  All credit to them.  I just updated this to work with the newer versions of PowerCLI.
+    
+#>
  
 
     [CmdletBinding()]
-
     param (
-
-                    [Parameter(Mandatory=$True)]
-
-                    [Vmware.VIMAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
-
- 
-
+        [Parameter(Mandatory=$True)]
+        [Vmware.VIMAutomation.ViCore.Types.V1.Inventory.VirtualMachine]$VM,
+        
         [Int]$Timeout = 600
-
     )
 
- 
-
     # ----- Check if VM is running
-
-    if ( $VM.Status -Ne 'Running' ) {
-
+    if ( $VM.PowerState -Ne 'PoweredOn' ) {
         Throw "Wait-VMWareOSCustomization : VM is not running."
-
     }
-
- 
 
     $Timer = [Diagnostics.Stopwatch]::StartNew()
 
- 
+    # wait until customization process has started    
+    Write-Verbose "Waiting for Customization to start ..."
 
-                # wait until customization process has started    
-
-                Write-Verbose "Waiting for Customization to start ..."
-
-                Do {
-
- 
-
-                                $vmEvents = Get-VIEvent -Entity $vm
-
-                                $startedEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationStartedEvent" }
-
-
-                                Start-Sleep -Seconds 2
-
- 
+    Do {
+        $vmEvents = Get-VIEvent -Entity $vm
+        $startedEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationStartedEvent" }
+        
+        Start-Sleep -Seconds 2
 
         # ----- Check for timeout
-
         if ( $Timer.Elapsed.TotalSeconds -gt $Timeout ) {
-
             $Timer.Stop()
 
             Throw "Wait-VMWareOSCustomization : Timeout waiting for customizations to start"
 
         }
-
- 
-
-                } Until ( $startedEvent )
+    } Until ( $startedEvent )
 
 
-                # wait until customization process has completed or failed
+    # wait until customization process has completed or failed
+    Write-Verbose "Waiting for customization to complete ..."
 
-                Write-Verbose "Waiting for customization to complete ..."
+    Do {
+        $vmEvents = Get-VIEvent -Entity $vm
+        $succeedEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationSucceeded" }
+        $failEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationFailed" }
 
-                Do {
-
-                                $vmEvents = Get-VIEvent -Entity $vm
-
-                                $succeedEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationSucceeded" }
-
-                                $failEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationFailed" }
-
-
-                                if ($failEvent) {
-
-                                                $Timer.Stop()
+        Write-Verbose "SucceedEvent = $($succeedEvent | out-string)"
+        Write-Verbose "FailEvent = $($failEvent | out-string)"
+        
+        if ($failEvent) {
+            $Timer.Stop()
 
             Throw "Wait-VMWareOSCustomization : OS Customization Failed."
-
-                                }
-
-
-                                Start-Sleep -Seconds 2                                  
-
-       
+        }
+        
+        Start-Sleep -Seconds 2                                     
 
         # ----- Check for timeout
-
         if ( $Timer.Elapsed.TotalSeconds -gt $Timeout ) {
-
             $Timer.Stop()
 
             Throw "Wait-VMWareOSCustomization : Timeout waiting for customizations to start"
-
         }
-
- 
-
-                } Until ($succeedEvent)
-
- 
-
-    Write-Verbose "Customization Succeeded"
-
- 
+    } Until ($succeedEvent)
+    
+    Write-Verbose "Customization Succeeded" 
 
     $Timer.Stop()
-
 }
 
  

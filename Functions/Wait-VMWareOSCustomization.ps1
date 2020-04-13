@@ -41,13 +41,15 @@
     $Timer = [Diagnostics.Stopwatch]::StartNew()
 
     # wait until customization process has started    
-    Write-Verbose "Waiting for Customization to start ..."
+    Write-Verbose "Waiting for OS Customization to start ..."
 
     Do {
         $vmEvents = Get-VIEvent -Entity $vm
         $startedEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationStartedEvent" }
         
         Start-Sleep -Seconds 2
+        
+        Write-Verbose "Elapsed Time = $($Timer.Elapsed.TotalSeconds)"
 
         # ----- Check for timeout
         if ( $Timer.Elapsed.TotalSeconds -gt $Timeout ) {
@@ -67,16 +69,18 @@
         $succeedEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationSucceeded" }
         $failEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationFailed" }
 
-        Write-Verbose "SucceedEvent = $($succeedEvent | out-string)"
-        Write-Verbose "FailEvent = $($failEvent | out-string)"
-        
+        Write-Debug "SucceedEvent = $($succeedEvent | out-string)"
+        Write-Debug "FailEvent = $($failEvent | out-string)"
+                
         if ($failEvent) {
             $Timer.Stop()
 
             Throw "Wait-VMWareOSCustomization : OS Customization Failed."
         }
         
-        Start-Sleep -Seconds 2                                     
+        Start-Sleep -Seconds 2  
+        
+        Write-Verbose "Elapsed Time = $($Timer.Elapsed.TotalSeconds)"                                   
 
         # ----- Check for timeout
         if ( $Timer.Elapsed.TotalSeconds -gt $Timeout ) {

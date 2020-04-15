@@ -30,7 +30,9 @@
         [Parameter(Mandatory=$True)]
         [Vmware.VIMAutomation.ViCore.Types.V1.Inventory.VirtualMachine]$VM,
         
-        [Int]$Timeout = 600
+        [Int]$Timeout = 600,
+
+        [Switch]$Retry
     )
 
     # ----- Check if VM is running
@@ -44,8 +46,8 @@
     Write-Verbose "Waiting for OS Customization to start ..."
 
     Do {
-        $vmEvents = Get-VIEvent -Entity $vm
-        $startedEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationStartedEvent" }
+        $vmEvents = Get-VIEvent -Entity $vm -Verbose:$False
+        $startedEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationStartedEvent" }           
         
         Start-Sleep -Seconds 2
         
@@ -58,14 +60,30 @@
             Throw "Wait-VMWareOSCustomization : Timeout waiting for customizations to start"
 
         }
+            
+        Write-Verbose "Still waiting for OS Customization to begin ..."
     } Until ( $startedEvent )
 
+    Write-Verbose "OS Customization has begun.  Event = $($startedEvent | Out-String)"
+    Write-Verbose "Number of started events = $($startedEvent.count())"
+
+    # ----- I have seen where the OS customization starts multiple times.  If this happens it will never complete.  Work around is to reboot and the customizations starts correctly.
+    if ( $Retry -and ($startedEvent.count() -ge 2)) {
+        Write-Verbose "The OS Customization started multiple times.  Retry setting is true.  Rebooting computer to continue."
+
+        Restart-VM -VM $VM | Wait-Tools 
+
+        # ----- Restart Timer, clear startedevent and Continue
+        $startedEvent = $Null
+
+        $Timer = [Diagnostics.Stopwatch]::StartNew()
+    }
 
     # wait until customization process has completed or failed
     Write-Verbose "Waiting for customization to complete ..."
 
     Do {
-        $vmEvents = Get-VIEvent -Entity $vm
+        $vmEvents = Get-VIEvent -Entity $vm -Verbose:$False
         $succeedEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationSucceeded" }
         $failEvent = $vmEvents | Where { $_.GetType().Name -eq "CustomizationFailed" }
 
@@ -88,9 +106,11 @@
 
             Throw "Wait-VMWareOSCustomization : Timeout waiting for customizations to start"
         }
+
+        Write-Verbose "Still waiting for OS Customization to complete..."
     } Until ($succeedEvent)
     
-    Write-Verbose "Customization Succeeded" 
+    Write-Verbose "Customization Succeeded.  SucceedEvent = $($succeedEvent | out-string)"
 
     $Timer.Stop()
 }

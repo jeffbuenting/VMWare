@@ -30,9 +30,9 @@
         [Parameter(Mandatory=$True)]
         [Vmware.VIMAutomation.ViCore.Types.V1.Inventory.VirtualMachine]$VM,
         
-        [Int]$Timeout = 600,
+        [Int]$Timeout = 600
 
-        [Switch]$Retry
+       # [Switch]$Retry
     )
 
     # ----- Check if VM is running
@@ -65,19 +65,19 @@
     } Until ( $startedEvent )
 
     Write-Verbose "OS Customization has begun.  Event = $($startedEvent | Out-String)"
-    Write-Verbose "Number of started events = $($startedEvent.count())"
+   # Write-Verbose "Number of started events = $($startedEvent.count())"
 
-    # ----- I have seen where the OS customization starts multiple times.  If this happens it will never complete.  Work around is to reboot and the customizations starts correctly.
-    if ( $Retry -and ($startedEvent.count() -ge 2)) {
-        Write-Verbose "The OS Customization started multiple times.  Retry setting is true.  Rebooting computer to continue."
-
-        Restart-VM -VM $VM | Wait-Tools 
-
-        # ----- Restart Timer, clear startedevent and Continue
-        $startedEvent = $Null
-
-        $Timer = [Diagnostics.Stopwatch]::StartNew()
-    }
+#    # ----- I have seen where the OS customization starts multiple times.  If this happens it will never complete.  Work around is to reboot and the customizations starts correctly.
+#    if ( $Retry -and ($startedEvent.count() -ge 2)) {
+#        Write-Verbose "The OS Customization started multiple times.  Retry setting is true.  Rebooting computer to continue."
+#
+#        Restart-VM -VM $VM | Wait-Tools 
+#
+#        # ----- Restart Timer, clear startedevent and Continue
+#        $startedEvent = $Null
+#
+#        $Timer = [Diagnostics.Stopwatch]::StartNew()
+#    }
 
     # wait until customization process has completed or failed
     Write-Verbose "Waiting for customization to complete ..."

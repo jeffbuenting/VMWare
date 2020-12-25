@@ -67,32 +67,42 @@
 
     # ----- Scan and install Updates
     # https://4sysops.com/archives/scan-download-and-install-windows-updates-with-powershell/
-    $Cmd = @"
-        Try {
-            `$updates = Start-WUScan -ErrorAction Stop
+    $UpdateCmd = @"
+        `$updates = Start-WUScan
+        if ( `$updates ) { 
             `$Job = Install-WUUpdates -Updates `$updates -AsJob
-            do {
-                Start-sleep -seconds 5
-            } Until ( (Get-Job -Job `$Job).State -eq 'Running' ) 
-        }
-        Catch {
-            $ExceptionMessage = $_.Exception.Message
-            $ExceptionType = $_.Exception.GetType().Fullname
-            Throw "Update-VMwareVMTemplate : Problem updating OS.`n`n     $ExceptionMessage`n`n $ExceptionType"
+            do { 
+                Start-sleep -seconds 30  
+            } Until ( (Get-Job `$Job).State
         }
 "@
 
+
+
+    # ----- Need to run powershell as admin on the VM for the Installl to work
+    $CMD = "Start-Process Powershell -Verb RunAs -ArgumentList '-Command `"$UpdateCMD`"'"
     Invoke-VMScript -VM $VM -ScriptText $Cmd -GuestCredential $GuestCredential
 
-    # ----- How long to wait for patches to install
-#    Start-Sleep -Seconds 120
-#
-#
-#    # ----- Shut down the VM
-#    Shutdown-VMGuest -vm $VM -Confirm:$False | Write-Verbose
-#
-#    Wait-VMState -VM $VM -State PoweredOff
-#
-#    # ----- Convert to Template
-#    Set-VM -VM $VM -ToTemplate -Confirm:$False | Write-Verbose
+    Try {
+        # ----- Restart to finish installs
+        Restart-VMGuest -VM $VM -ErrorAction Stop | write-Verbose
+
+        Wait-VMState -VM $VM -State PoweredON -ErrorAction Stop 
+    
+        # ----- Pause after restart to let things settle
+        Start-Sleep -Seconds 300
+
+        # ----- Shut down the VM
+        Shutdown-VMGuest -vm $VM -Confirm:$False -ErrorAction Stop | Write-Verbose
+
+        Wait-VMState -VM $VM -State PoweredOff -ErrorAction Stop 
+
+        # ----- Convert to Template
+        Set-VM -VM $VM -ToTemplate -Confirm:$False -ErrorAction Stop | Write-Verbose
+    }
+    Catch {
+            $ExceptionMessage = $_.Exception.Message
+            $ExceptionType = $_.Exception.GetType().Fullname
+            Throw "Update-VMwareVMTemplate : There was a problem shutting down VM and Converting it to a template.`n`n     $ExceptionMessage`n`n $ExceptionType"
+        }
 }

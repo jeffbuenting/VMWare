@@ -1,11 +1,44 @@
 ﻿Function Update-VMWareVMTemplate {
 
+<#
+    .SYNOPSIS
+        Install patches on VMware Template.
+
+    .DESCRIPTION
+        Installs patches.  Currently only works with WIndows patches.
+
+    .PARAMETER Template
+        Template object or Template name.
+
+    .PARAMETER GuestCredential
+        Admin credentials for the templates guest OS.
+
+    .EXAMPLE
+        Install Updates on template given a name.
+
+        Update-VMwareVMTemplate -Template 'Windows2019' -GuestCredential $Cred
+
+    .EXAMPLE
+        Install Updates on a template 
+
+        $Template = Get-Template 'Windows2019'
+        Update-VMwareVMTemplate -Template $Template -GuestCredential $Cred
+
+    .NOTES
+        Author : Jeff Buenting
+        Date : 2020 DEC 24 (Merry Christmas)
+
+
+        TODO : Get-Job so we can wait until the patches are installed.
+#>
+
     [CmdletBinding()]
     Param (
         [Parameter (Mandatory = $True) ]
-        [PSObject]$Template
+        [PSObject]$Template,
 
-        
+        [Parameter (Mandatory = $True) ]
+        [PSCredential]$GuestCredential   
     )
     
     # ----- Get the template if it $Template is not a template
@@ -23,6 +56,7 @@
 
     # ----- Convert Template to VM
     Write-Verbose "Converting $($Template.Name) to VM"
+
     Set-Template -Template $Template -ToVM | Write-Verbose
 
     $VM = Get-VM -Name $Template.Name 
@@ -36,11 +70,9 @@
     $Cmd = @"
         $updates = Start-WUScan 
         Install-WUUpdates -Updates $updates
-
-
 "@
 
-#    Invoke-VMScript -VM $VM -ScriptText $Cmd
+    Invoke-VMScript -VM $VM -ScriptText $Cmd -GuestCredential $GuestCredential
 
     # ----- How long to wait for patches to install
     Start-Sleep -Seconds 120

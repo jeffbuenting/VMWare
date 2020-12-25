@@ -24,12 +24,12 @@
         $Template = Get-Template 'Windows2019'
         Update-VMwareVMTemplate -Template $Template -GuestCredential $Cred
 
+    .LINK
+        https://github.com/MicrosoftDocs/windows-powershell-docs
+
     .NOTES
         Author : Jeff Buenting
         Date : 2020 DEC 24 (Merry Christmas)
-
-
-        TODO : Get-Job so we can wait until the patches are installed.
 #>
 
     [CmdletBinding()]
@@ -68,21 +68,31 @@
     # ----- Scan and install Updates
     # https://4sysops.com/archives/scan-download-and-install-windows-updates-with-powershell/
     $Cmd = @"
-        $updates = Start-WUScan 
-        Install-WUUpdates -Updates $updates
+        Try {
+            `$updates = Start-WUScan -ErrorAction Stop
+            `$Job = Install-WUUpdates -Updates `$updates -AsJob
+            do {
+                Start-sleep -seconds 5
+            } Until ( (Get-Job -Job `$Job).State -eq 'Running' ) 
+        }
+        Catch {
+            $ExceptionMessage = $_.Exception.Message
+            $ExceptionType = $_.Exception.GetType().Fullname
+            Throw "Update-VMwareVMTemplate : Problem updating OS.`n`n     $ExceptionMessage`n`n $ExceptionType"
+        }
 "@
 
     Invoke-VMScript -VM $VM -ScriptText $Cmd -GuestCredential $GuestCredential
 
     # ----- How long to wait for patches to install
-    Start-Sleep -Seconds 120
-
-
-    # ----- Shut down the VM
-    Shutdown-VMGuest -vm $VM -Confirm:$False | Write-Verbose
-
-    Wait-VMState -VM $VM -State PoweredOff
-
-    # ----- Convert to Template
-    Set-VM -VM $VM -ToTemplate -Confirm:$False | Write-Verbose
+#    Start-Sleep -Seconds 120
+#
+#
+#    # ----- Shut down the VM
+#    Shutdown-VMGuest -vm $VM -Confirm:$False | Write-Verbose
+#
+#    Wait-VMState -VM $VM -State PoweredOff
+#
+#    # ----- Convert to Template
+#    Set-VM -VM $VM -ToTemplate -Confirm:$False | Write-Verbose
 }

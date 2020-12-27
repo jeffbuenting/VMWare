@@ -38,7 +38,12 @@
         [PSObject]$Template,
 
         [Parameter (Mandatory = $True) ]
-        [PSCredential]$GuestCredential   
+        [PSCredential]$GuestCredential,
+        
+        [Parameter (Mandatory = $True) ]
+        [String]$RemoteLog,
+
+        [Int]$TimeoutSec = 3600
     )
     
     # ----- Get the template if it $Template is not a template
@@ -66,21 +71,43 @@
     Wait-VMState -VM $VM -State PoweredON
 
     # ----- Scan and install Updates
-    # https://4sysops.com/archives/scan-download-and-install-windows-updates-with-powershell/
-    $UpdateCmd = @"
-        `$updates = Start-WUScan
-        if ( `$updates ) { 
-            `$Job = Install-WUUpdates -Updates `$updates -AsJob
-            do { 
-                Start-sleep -seconds 30  
-            } Until ( (Get-Job `$Job).State
-        }
+# ----- Is the PSWindowsUpdate module there?
+    $CreateScript =  @"
+        `$UpdateCMD = @'
+            Out-File -FilePath $RemotePath\TemplateUpdate.log -InputObject "--------------------------" -Append
+
+
+
+            if ( -Not ( Get-Module -ListAvailable -Name PSWindowsUPdate ) ) {
+                Out-File -FilePath $RemotePath\TemplateUpdate.log -InputObject "`$(Get-Date -Format G) - Start-OSUpdate : Error : PSWindowsUpdate is required." -Append
+                Throw "Start-OSUpdate : PSWindowsUpdate is required."
+            }
+            Else {
+                Out-File -FilePath $RemotePath\TemplateUpdate.log -InputObject "`$(Get-Date -Format G) - Importing PSWIndowsUpdate Module." -Append
+                Import-module PSWindowsUpdate
+            }
+
+            Try {
+                `$Updates = Get-WUList -ErrorAction Stop
+                Out-File -FilePath $RemotePath\TemplateUpdate.log -InputObject "`$(Get-Date -Format G) - ``n`$(`$Updates | Out-string)." -Append
+                `$Updates | Install-WindowsUpdate -AutoReboot -Confirm $False -ErrorAction Stop
+            }
+            Catch {
+                `$ExceptionMessage = `$_.Exception.Message
+                `$ExceptionType = `$_.Exception.GetType().Fullname
+                Out-File -FilePath $RemotePath\TemplateUpdate.log -InputObject "`$(Get-Date -Format G) - Start-OSUpdate : Error : Getting or Installing Updates.``n``n     `$ExceptionMessage``n``n `$ExceptionType" -Append
+            }
+'@
+        `$UpdateCmd | out-file $RemotePath\Start-OSUpdate.ps1 -Append
 "@
 
+Invoke-VMScript -VM $VM -ScriptText $CreateScript -GuestCredential $GuestCredential
 
 
-    # ----- Need to run powershell as admin on the VM for the Installl to work
-    $CMD = "Start-Process Powershell -Verb RunAs -ArgumentList '-Command `"$UpdateCMD`"'"
+    $CMD = @"
+        Start-Process C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Verb Runas -argumentList "-ExecutionPolicy Bypass -File $RemotePath\Start-OSUpdate.ps1"
+"@
+
     Invoke-VMScript -VM $VM -ScriptText $Cmd -GuestCredential $GuestCredential
 
     Try {

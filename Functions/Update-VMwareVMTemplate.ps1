@@ -13,6 +13,9 @@
     .PARAMETER WaitHours
         Number of hours to wait while patches are installed before converting back to templates.
 
+    .PARAMETER VMToolsTimeout
+        How long to wait until the VMTools are running.  This prevents a 'hung' script.
+
     .EXAMPLE
         Install Updates on templates. and wait 24 hours to install patches.
 
@@ -33,7 +36,9 @@
         [Parameter (Mandatory = $True,ValueFromPipeline = $True) ]
         [VMware.VimAutomation.ViCore.Impl.V1.Inventory.TemplateImpl[]]$Template,
 
-        [Decimal]$WaitHours = 24
+        [Decimal]$WaitHours = 24,
+
+        [Int]$VMToolsTimeout = 300
     )
     
     Begin {
@@ -58,7 +63,7 @@
             Start-VM -VM $VM | write-Verbose
 
             Write-Verbose "VMs started, waiting for VMware Tools"
-            Wait-Tools -VM $VM -TimeoutSeconds 300 -ErrorAction Stop | write-Verbose
+            Wait-Tools -VM $VM -TimeoutSeconds $VMToolsTimeout -ErrorAction Stop | write-Verbose
         }
         Catch {
             $ExceptionMessage = $_.Exception.Message

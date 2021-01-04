@@ -69,13 +69,19 @@ Copyright = '(c) 2018 600990. All rights reserved.'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Get-VMWareAlarm', 'Copy-VMWareAlarm', 'Get-VMWareEvent', 
-               'Get-VMWareVMReconfiguration', 'Get-VMWareMotionHistory', 
-               'Get-VMWareOrphanedFile', 'Get-VMWareHostLogList', 
-               'Get-VMWareHostLog', 'Test-VMWareHostConnection', 
-               'Get-VMWareResourceShare', 
-               'CalculateVMWareResourceSharePercentageHelper', 
-               'Find-VMWareResourceSharePercentage', 'Get-VMWareRamdisk'
+FunctionsToExport =  'CalculateVMWareResourceSharePercentageHelper',
+    'Copy-VMWareAlarm', 
+    'Find-VMWareResourceSharePercentage',
+    'Get-VMWareAlarm',
+    'Get-VMWareEvent', 
+    'Get-VMWareVMReconfiguration', 'Get-VMWareMotionHistory', 
+    'Get-VMWareOrphanedFile', 'Get-VMWareHostLogList', 
+    'Get-VMWareHostLog', 'Test-VMWareHostConnection', 
+    'Get-VMWareRamdisk',
+    'Get-VMWareResourceShare', 
+    'Update-VMWareVMTemplate',
+    'Wait-VMWareOSCustomization',
+    'Wait-VMState'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

@@ -1,17 +1,21 @@
 # $VCSA = Read-Host 'vCenter ServerName'
 
-Connect-VIServer -Server $VCSA
+# Connect-VIServer -Server $VCSA
 
 $Report = @()
 
-$VMs = get-vm |Where-object {$_.powerstate -eq "poweredoff"}
+$VMFolder = Get-folder -Name "Powered Off VMs" 
+
+$PoweredOffVMs = get-vm -Location $VMFolder 
 
 $Datastores = Get-Datastore | select-Object Name, Id
 
-Get-VIEvent -Entity $VMs -MaxSamples ([int]::MaxValue) | Where-Object {$_ -is [VMware.Vim.VmPoweredOffEvent]} | Group-Object -Property {$_.Vm.Name} | ForEach-Object {
+foreach ( $VM in $PoweredOffVMs ) {
 
-    $lastPO = $_.Group | Sort-Object -Property CreatedTime -Descending | Select-Object -First 1
-    $vm = Get-VIObjectByVIView -MORef $_.Group[0].VM.VM
+    $POEvent = Get-VIEvent -Entity $VM -MaxSamples ([int]::MaxValue) | Where-Object {$_ -is [VMware.Vim.VmPoweredOffEvent]} | Group-Object -Property {$_.Vm.Name}
+   
+     $lastPO = $POEvent.Group | Sort-Object -Property CreatedTime -Descending | Select-Object -First 1
+    # $vm = Get-VIObjectByVIView -MORef $_.Group[0].VM.VM
 
     $row = '' | Select-Object VMName,Powerstate,OS,Host,Cluster,Datastore,NumCPU,MemMb,DiskGb,PowerOFF
     $row.VMName = $vm.Name
@@ -29,6 +33,8 @@ Get-VIEvent -Entity $VMs -MaxSamples ([int]::MaxValue) | Where-Object {$_ -is [V
 
 }
 
-#$report | Sort-Object Name # | Export-Csv -Path "C:\XXXXX\Powered_Off_VMs.csv" -NoTypeInformation -UseCulture
+$Computers = $report | Sort-Object VMName | where PowerOFF -eq $Null #| FT VMName, Powerstate, PowerOFF
 
-disconnect-viserver * -confirm:$false 
+
+
+# disconnect-viserver * -confirm:$false 
